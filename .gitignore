@@ -1,3 +1,15 @@
 .DS_Store
 
 .vscode/*
+tester/auto-advisor/darwin-amd64
+tester/auto-advisor/darwin-arm64
+tester/auto-advisor/linux-amd64
+tester/auto-advisor/windows-amd64.exe
+tester/matrix-multiplication/darwin-amd64
+tester/matrix-multiplication/darwin-arm64
+tester/matrix-multiplication/linux-amd64
+tester/matrix-multiplication/windows-amd64.exe
+tester/quicksort/darwin-amd64
+tester/quicksort/darwin-arm64
+tester/quicksort/linux-amd64
+tester/quicksort/windows-amd64.exe
