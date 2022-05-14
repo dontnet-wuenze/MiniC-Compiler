@@ -13,3 +13,6 @@ tester/quicksort/darwin-amd64
 tester/quicksort/darwin-arm64
 tester/quicksort/linux-amd64
 tester/quicksort/windows-amd64.exe
+
+build/*
+.*/*

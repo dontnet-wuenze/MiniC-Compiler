@@ -5,8 +5,9 @@ E			([Ee][+-]?{D}+)
 
 %{
 #include <stdio.h>
+#include <iostream>
 #include "y.tab.h"
-#include "tree.h"
+#include "treenode.h"
 
 void count(void);
 %}
