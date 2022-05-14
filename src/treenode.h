@@ -42,34 +42,12 @@ public:
   int value;
 };
 
-class IntArrayNode : public ExpressionNode {
-public:
-  IntArrayNode(size_t size) : size(size) {
-    values = new int[size];
-  }
-  llvm::Value *emitter(EmitContext &emitContext);
-public:
-  int *values;
-  size_t size;
-};
-
 class DoubleNode : public ExpressionNode {
 public:
   DoubleNode(double value) : value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   double value;
-};
-
-class DoubleArrayNode : public ExpressionNode {
-public:
-  DoubleArrayNode(size_t size) : size(size) {
-    values = new double[size];
-  }
-  llvm::Value *emitter(EmitContext &emitContext);
-public:
-  double *values;
-  size_t size;
 };
 
 class CharNode : public ExpressionNode {
@@ -80,23 +58,39 @@ public:
   char value;
 };
 
-class CharArrayNode : public ExpressionNode {
-public:
-  CharArrayNode(size_t size) : size(size) {
-    values = new char[size];
-  }
-  llvm::Value *emitter(EmitContext &emitContext);
-public:
-  char *values;
-  size_t size;
-};
-
 class IdentifierNode : public ExpressionNode {
 public:
   IdentifierNode(string &name) : name(name) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   string name;
+};
+
+class IntArrayElementNode : public ExpressionNode {
+public:
+  IntArrayElementNode(IdentifierNode& identifier, size_t index) : identifier(identifier), index(index) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+public:
+  IdentifierNode& identifier;
+  size_t index;
+};
+
+class DoubleArrayElementNode : public ExpressionNode {
+public:
+  DoubleArrayElementNode(IdentifierNode& identifier, size_t index) : identifier(identifier), index(index) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+public:
+  IdentifierNode& identifier;
+  size_t index;
+};
+
+class CharArrayElementNode : public ExpressionNode {
+public:
+  CharArrayElementNode(IdentifierNode& identifier, size_t index) : identifier(identifier), index(index) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+public:
+  IdentifierNode& identifier;
+  size_t index;
 };
 
 class FunctionCallNode : public ExpressionNode {
@@ -167,6 +161,17 @@ public:
   IdentifierNode &type;
   IdentifierNode &identifier;
   ExpressionNode *assignmentExpression;
+};
+
+class ArrayDeclarationNode : public StatementNode {
+public:
+  ArrayDeclarationNode(IdentifierNode &type, IdentifierNode &identifier) : 
+    type(type), identifier(identifier) {}
+  virtual llvm::Value* emitter(EmitContext &emitContext);
+public:
+  IdentifierNode &type;
+  size_t size;
+  IdentifierNode &identifier;
 };
 
 class FunctionDeclarationNode : public StatementNode {
