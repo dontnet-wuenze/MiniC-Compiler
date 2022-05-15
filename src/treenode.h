@@ -3,7 +3,6 @@
 #define _TREENODE_H_
 
 #include "llvm/ADT/STLExtras.h"
-#include <bits/c++config.h>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -68,6 +67,15 @@ public:
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   string name;
+};
+
+class ArrayElementNode : public ExpressionNode {
+public:
+  ArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+public:
+  IdentifierNode& identifier;
+  size_t index;
 };
 
 // deprecated

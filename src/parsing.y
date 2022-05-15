@@ -130,9 +130,72 @@ const_value:
         $$ = new FloatNode(atof($1->c_str()), yylineno);
     }
     | CHAR {
-        $$ = new CharNode()
+        $$ = new CharNode($1->at(0), yylineno);
+    };
+
+call_args:
+    {
+        $$ = new std::vector<ExpressionNode*>();
     }
+    | expression {
+        $$ = new std::vector<ExpressionNode*>();
+        $$->push_back($1);
+    }
+    | call_args ',' expression {
+        $1->push->back($3);
+    };
 
 expression:
-    identifier '=' expression
+    identifier '=' expression {
+        $$ = new AssignmentNode(*$<identifier>1, *$3, yylineno);
+    }
+    | identifier '(' call_args ')' {
+        $$ = new FunctionCallNode(*$1, *$3, yylineno);
+    }
+    | identifier {
+        $<identifier>$ = $1;
+    }
+    | expression MUL expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression DIV expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression PLUS expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression MINUS expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression AND expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression OR expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression LT expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression GT expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression EQ expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression NEQ expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression LE expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression GE expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | '(' expression ')' {
+        $$ = $2;
+    }
+    | identifier '[' expression ']' {
+        $$ = new ArrayElementNode(*$1, $3, yylineno);
+    }
+    | const_value;
 %%
