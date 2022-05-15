@@ -69,6 +69,15 @@ public:
   string name;
 };
 
+class ArrayElementNode : public ExpressionNode {
+public:
+  ArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+public:
+  IdentifierNode& identifier;
+  size_t index;
+};
+
 // deprecated
 class IntArrayElementNode : public ExpressionNode {
 public:
