@@ -25,7 +25,7 @@ void comment(void);
 "//"[^\n]*      { /* consume //-comment */ }
 
     /* match all the necessary keywords */
-"bool"          { count(); return TOKEN(BOOL);     }
+"bool"          { count(); return TOKEN(BOOL);     } // TODO: remove this line, we do not support bool type, use int instead.
 "break"         { count(); return TOKEN(BREAK);    }
 "char"          { count(); return TOKEN(CHAR);     }
 "continue"      { count(); return TOKEN(CONTINUE); }
@@ -58,20 +58,12 @@ L?'(\\.|[^\\'\n])+'      { count(); SAVE_TOKEN; return CONSTANT_STRING; /* strin
 
 
     /* operators */
-"+="            { count(); return TOKEN(ADD_ASSIGN); }
-"-="            { count(); return TOKEN(SUB_ASSIGN); }
-"*="            { count(); return TOKEN(MUL_ASSIGN); }
-"/="            { count(); return TOKEN(DIV_ASSIGN); }
-"%="            { count(); return TOKEN(MOD_ASSIGN); }
-"&="            { count(); return TOKEN(AND_ASSIGN); }
-"^="            { count(); return TOKEN(XOR_ASSIGN); }
-"|="            { count(); return TOKEN(OR_ASSIGN); }
-"&&"            { count(); return TOKEN(AND_OP); }
-"||"            { count(); return TOKEN(OR_OP); }
-"<="            { count(); return TOKEN(LE_OP); }
-">="            { count(); return TOKEN(GE_OP); }
-"=="            { count(); return TOKEN(EQ_OP); }
-"!="            { count(); return TOKEN(NE_OP); }
+"&&"            { count(); return TOKEN(AND); }
+"||"            { count(); return TOKEN(OR); }
+"<="            { count(); return TOKEN(LE); }
+">="            { count(); return TOKEN(GE); }
+"=="            { count(); return TOKEN(EQ); }
+"!="            { count(); return TOKEN(NEQ); }
 ";"             { count(); return TOKEN(';'); }
 "{"             { count(); return TOKEN('{'); }
 "}"             { count(); return TOKEN('}'); }
@@ -86,13 +78,13 @@ L?'(\\.|[^\\'\n])+'      { count(); SAVE_TOKEN; return CONSTANT_STRING; /* strin
 "&"             { count(); return TOKEN('&'); }
 "!"             { count(); return TOKEN('!'); }
 "~"             { count(); return TOKEN('~'); }
-"-"             { count(); return TOKEN('-'); }
-"+"             { count(); return TOKEN('+'); }
-"*"             { count(); return TOKEN('*'); }
-"/"             { count(); return TOKEN('/'); }
+"-"             { count(); return TOKEN(MINUS); }
+"+"             { count(); return TOKEN(PLUS); }
+"*"             { count(); return TOKEN(MUL); }
+"/"             { count(); return TOKEN(DIV); }
 "%"             { count(); return TOKEN('%'); }
-"<"             { count(); return TOKEN('<'); }
-">"             { count(); return TOKEN('>'); }
+"<"             { count(); return TOKEN(LT); }
+">"             { count(); return TOKEN(GT); }
 "^"             { count(); return TOKEN('^'); }
 "|"             { count(); return TOKEN('|'); }
 "?"             { count(); return TOKEN('?'); }

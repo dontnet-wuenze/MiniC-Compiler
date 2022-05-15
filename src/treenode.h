@@ -69,6 +69,7 @@ public:
   string name;
 };
 
+// deprecated
 class IntArrayElementNode : public ExpressionNode {
 public:
   IntArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
@@ -78,6 +79,7 @@ public:
   size_t index;
 };
 
+// deprecated
 class FloatArrayElementNode : public ExpressionNode {
 public:
   FloatArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
@@ -87,7 +89,8 @@ public:
   size_t index;
 };
 
-class CharArrayElementNode : public ExpressionNode {
+// deprecated
+class CharArrayElementNode : public ExpressionNode { 
 public:
   CharArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
@@ -151,16 +154,22 @@ public:
 
 class VariableDeclarationNode : public StatementNode {
 public:
-  VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), assignmentExpression(nullptr) {}
+  VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), size(0), assignmentExpression(nullptr) {}
+
+  VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, size_t size, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), size(size), assignmentExpression(nullptr) {}
+
   VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, 
     ExpressionNode *assignmentExpression, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), assignmentExpression(assignmentExpression) {}
+
   virtual llvm::Value* emitter(EmitContext &emitContext);
 public:
+  size_t size; // size != 0 means this is an array
   IdentifierNode &type;
   IdentifierNode &identifier;
   ExpressionNode *assignmentExpression;
 };
 
+// deprecated
 class ArrayDeclarationNode : public StatementNode {
 public:
   ArrayDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier) {}
