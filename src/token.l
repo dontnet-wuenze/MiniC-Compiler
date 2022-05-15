@@ -11,7 +11,10 @@ E			([Ee][+-]?{D}+)
 #define SAVE_TOKEN yylval.string = new std::string(yytext, yyleng)
 #define TOKEN(t) (yylval.token = t)
 
+int column = 0;
+
 void count(void);
+void comment(void);
 %}
 
 %option yylineno
@@ -110,7 +113,7 @@ void comment(void)
 	column = 0;
 	char c, prev = 0;
 	
-	while (cin >> c)      /* (EOF maps to 0) */
+	while (std::cin >> c)      /* (EOF maps to 0) */
 	{
 		if (c == '/' && prev == '*')
 			return;
@@ -118,9 +121,6 @@ void comment(void)
 	}
 	printf("unterminated comment");
 }
-
-
-int column = 0;
 
 void count(void)
 {
