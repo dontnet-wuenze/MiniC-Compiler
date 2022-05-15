@@ -18,3 +18,4 @@ build/*
 .*/*
 
 src/token.cpp
+CMakeLists.txt
