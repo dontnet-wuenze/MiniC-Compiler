@@ -7,8 +7,6 @@ E			([Ee][+-]?{D}+)
 #include <stdio.h>
 #include <iostream>
 #include <string>
-#include "y.tab.h"
-#include "treenode.h"
 
 #define SAVE_TOKEN yylval.string = new std::string(yytext, yyleng)
 #define TOKEN(t) (yylval.token = t)
@@ -19,17 +17,17 @@ void count(void);
 %option yylineno
 
 %%
-/* match two types of comments */
+	/* match two types of comments */
 "/*"			{ comment(); }
 "//"[^\n]*      { /* consume //-comment */ }
 
-/* match all the necessary keywords */
+	/* match all the necessary keywords */
 "bool"          { count(); return TOKEN(BOOL); }
 "break"			{ count(); return TOKEN(BREAK); }
 "char"			{ count(); return TOKEN(CHAR); }
 "continue"		{ count(); return TOKEN(CONTINUE); }
 "else"			{ count(); return TOKEN(ELSE); }
-"false" 		{ count(); return TOKEN(FALSE)};
+"false" 		{ count(); return TOKEN(FALSE);}
 "float"			{ count(); return TOKEN(FLOAT); }
 "for"			{ count(); return TOKEN(FOR); }
 "if"			{ count(); return TOKEN(IF); }
@@ -39,10 +37,10 @@ void count(void);
 "void"			{ count(); return TOKEN(VOID); }
 "while"			{ count(); return TOKEN(WHILE); }
 
-/* identifiers */
+	/* identifiers */
 {L}({L}|{D})*		{ count(); SAVE_TOKEN; return IDENTIFIER; }
 
-/* constants */
+	/* constants */
 0[xX]{H}+			{ count(); SAVE_TOKEN; return CONSTANT_INT; /* hexadecimal */ }
 0[0-7]*				{ count(); SAVE_TOKEN; return CONSTANT_INT; /* octal */ }
 [1-9]{D}*			{ count(); SAVE_TOKEN; return CONSTANT_INT; /* decimal */ }
@@ -56,7 +54,7 @@ L?'(\\.|[^\\'\n])+'	{ count(); SAVE_TOKEN; return CONSTANT_STRING; /* string */}
 {D}+"."{D}*{E}?		{ count(); SAVE_TOKEN; return CONSTANT_FLOAT; }
 
 
-/* operators */
+	/* operators */
 "+="			{ count(); return TOKEN(ADD_ASSIGN); }
 "-="			{ count(); return TOKEN(SUB_ASSIGN); }
 "*="			{ count(); return TOKEN(MUL_ASSIGN); }
