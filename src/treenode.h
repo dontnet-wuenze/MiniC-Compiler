@@ -3,6 +3,7 @@
 #define _TREENODE_H_
 
 #include "llvm/ADT/STLExtras.h"
+#include <bits/c++config.h>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -17,6 +18,7 @@ class EmitContext;
 
 class TreeNode {
 public:
+  TreeNode(int lineNo) : lineNo(lineNo) {}
   virtual ~TreeNode() {}
   virtual llvm::Value *emitter(EmitContext &emitContext) {
     return nullptr;
@@ -27,32 +29,34 @@ public:
 
 class ExpressionNode : public TreeNode {
 public:
+  ExpressionNode(int lineNo) : TreeNode(lineNo) {}
   virtual llvm::Value *emitter(EmitContext &emitContext);
 };
 class StatementNode : public TreeNode {
 public:
+  StatementNode(int lineNo) : TreeNode(lineNo) {}
   virtual llvm::Value *emitter(EmitContext &emitContext);
 };
 
 class IntNode : public ExpressionNode {
 public:
-  IntNode(int value) : value(value) {}
+  IntNode(int value, int lineNo) : ExpressionNode(lineNo), value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   int value;
 };
 
-class DoubleNode : public ExpressionNode {
+class FloatNode : public ExpressionNode {
 public:
-  DoubleNode(double value) : value(value) {}
+  FloatNode(float value, int lineNo) : ExpressionNode(lineNo), value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
-  double value;
+  float value;
 };
 
 class CharNode : public ExpressionNode {
 public:
-  CharNode(char value) : value(value) {}
+  CharNode(char value, int lineNo) : ExpressionNode(lineNo), value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   char value;
@@ -60,33 +64,36 @@ public:
 
 class IdentifierNode : public ExpressionNode {
 public:
-  IdentifierNode(string &name) : name(name) {}
+  IdentifierNode(string &name, int lineNo) : ExpressionNode(lineNo), name(name) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   string name;
 };
 
+// deprecated
 class IntArrayElementNode : public ExpressionNode {
 public:
-  IntArrayElementNode(IdentifierNode& identifier, size_t index) : identifier(identifier), index(index) {}
+  IntArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& identifier;
   size_t index;
 };
 
-class DoubleArrayElementNode : public ExpressionNode {
+// deprecated
+class FloatArrayElementNode : public ExpressionNode {
 public:
-  DoubleArrayElementNode(IdentifierNode& identifier, size_t index) : identifier(identifier), index(index) {}
+  FloatArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& identifier;
   size_t index;
 };
 
-class CharArrayElementNode : public ExpressionNode {
+// deprecated
+class CharArrayElementNode : public ExpressionNode { 
 public:
-  CharArrayElementNode(IdentifierNode& identifier, size_t index) : identifier(identifier), index(index) {}
+  CharArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& identifier;
@@ -95,9 +102,8 @@ public:
 
 class FunctionCallNode : public ExpressionNode {
 public:
-  FunctionCallNode(IdentifierNode &identifier, vector<ExpressionNode*> &args) : 
-    identifier(identifier), args(args) {}
-  FunctionCallNode(IdentifierNode &identifier) : identifier(identifier) {}
+  FunctionCallNode(IdentifierNode &identifier, vector<ExpressionNode*> &args, int lineNo) : ExpressionNode(lineNo), identifier(identifier), args(args) {}
+  FunctionCallNode(IdentifierNode &identifier, int lineNo) : ExpressionNode(lineNo), identifier(identifier) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& identifier;
@@ -106,8 +112,7 @@ public:
 
 class BinaryOpNode : public ExpressionNode {
 public:
-  BinaryOpNode(int op, ExpressionNode &lhs, ExpressionNode &rhs) : 
-    op(op), lhs(lhs), rhs(rhs) {}
+  BinaryOpNode(int op, ExpressionNode &lhs, ExpressionNode &rhs, int lineNo) : ExpressionNode(lineNo), op(op), lhs(lhs), rhs(rhs) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   int op;
@@ -117,8 +122,7 @@ public:
 
 class AssignmentNode : public ExpressionNode {
 public:
-  AssignmentNode(IdentifierNode &lhs, ExpressionNode &rhs) : 
-    lhs(lhs), rhs(rhs) {}
+  AssignmentNode(IdentifierNode &lhs, ExpressionNode &rhs, int lineNo) : ExpressionNode(lineNo), lhs(lhs), rhs(rhs) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& lhs;
@@ -127,8 +131,8 @@ public:
 
 class BlockNode : public ExpressionNode {
 public:
-  BlockNode() {}
-  BlockNode(vector<StatementNode*> statementList) : statementList(statementList) {}
+  BlockNode(int lineNo) : ExpressionNode(lineNo) {}
+  BlockNode(vector<StatementNode*> statementList, int lineNo) : ExpressionNode(lineNo),  statementList(statementList) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   vector<StatementNode*> statementList;
@@ -137,13 +141,13 @@ public:
 class ExpressionStatementNode : public StatementNode {
 public:
 	ExpressionNode &expression;
-	ExpressionStatementNode(ExpressionNode& expression) : expression(expression) {}
+	ExpressionStatementNode(ExpressionNode& expression, int lineNo) : StatementNode(lineNo),  expression(expression) {}
 	virtual llvm::Value* emitter(EmitContext &emitContext);
 };
 
 class ReturnStatementNode : public StatementNode {
 public:
-  ReturnStatementNode(ExpressionNode &expression) : expression(expression) {}
+  ReturnStatementNode(ExpressionNode &expression, int lineNo) : StatementNode(lineNo), expression(expression) {}
   virtual llvm::Value* emitter(EmitContext &emitContext);
 public:
   ExpressionNode &expression;
@@ -151,22 +155,25 @@ public:
 
 class VariableDeclarationNode : public StatementNode {
 public:
-  VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier) : 
-    type(type), identifier(identifier), assignmentExpression(nullptr) {}
+  VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), size(0), assignmentExpression(nullptr) {}
+
+  VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, size_t size, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), size(size), assignmentExpression(nullptr) {}
+
   VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, 
-    ExpressionNode *assignmentExpression) :
-    type(type), identifier(identifier), assignmentExpression(assignmentExpression) {}
+    ExpressionNode *assignmentExpression, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), assignmentExpression(assignmentExpression) {}
+
   virtual llvm::Value* emitter(EmitContext &emitContext);
 public:
+  size_t size; // size != 0 means this is an array
   IdentifierNode &type;
   IdentifierNode &identifier;
   ExpressionNode *assignmentExpression;
 };
 
+// deprecated
 class ArrayDeclarationNode : public StatementNode {
 public:
-  ArrayDeclarationNode(IdentifierNode &type, IdentifierNode &identifier) : 
-    type(type), identifier(identifier) {}
+  ArrayDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier) {}
   virtual llvm::Value* emitter(EmitContext &emitContext);
 public:
   IdentifierNode &type;
@@ -177,8 +184,7 @@ public:
 class FunctionDeclarationNode : public StatementNode {
 public:
   FunctionDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, 
-    vector<VariableDeclarationNode*> args, BlockNode& block) :
-   type(type), identifier(identifier), args(args), block(block) {}
+    vector<VariableDeclarationNode*> args, BlockNode& block, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), args(args), block(block) {}
   virtual llvm::Value* emitter(EmitContext &emitContext);
 public:
   IdentifierNode &type;
