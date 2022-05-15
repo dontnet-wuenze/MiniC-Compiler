@@ -3,6 +3,7 @@
 #define _TREENODE_H_
 
 #include "llvm/ADT/STLExtras.h"
+#include <bits/c++config.h>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
