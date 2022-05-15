@@ -95,7 +95,7 @@ var_decl:
     | identifier identifier EQ expression {
         $$ = new VariableDeclarationNode(*$1, *$2, *$4, yylineno);
     }
-    | identifier identifier '[' INT ']' { // array
+    | identifier identifier '[' CONSTANT_INT ']' { // array
         $$ = new VariableDeclarationNode(*$1, *$2, $4, yylineno);
     }
     ;
@@ -123,13 +123,13 @@ identifier:
     };
 
 const_value: 
-    INT {
+    CONSTANT_INT {
         $$ = new IntNode(atoi($1->c_str()), yylineno);
     }
-    | FLOAT {
+    | CONSTANT_FLOAT {
         $$ = new FloatNode(atof($1->c_str()), yylineno);
     }
-    | CHAR {
+    | CONSTANT_CHAR {
         $$ = new CharNode($1->at(0), yylineno);
     };
 
