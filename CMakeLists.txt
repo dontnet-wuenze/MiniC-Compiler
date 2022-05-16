@@ -3,8 +3,10 @@ project(Compiler)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_package(PkgConfig REQUIRED)
+
 find_package(LLVM REQUIRED CONFIG)
-find_package(jsoncpp REQUIRED)
+pkg_check_modules(JSONCPP jsoncpp)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})

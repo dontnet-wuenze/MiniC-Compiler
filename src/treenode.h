@@ -8,7 +8,6 @@
 #include <cstring>
 #include <iostream>
 #include <llvm/IR/Value.h>
-#include <sys/_types/_size_t.h>
 #include <vector>
 
 using namespace std;
@@ -71,41 +70,41 @@ public:
 
 class ArrayElementNode : public ExpressionNode {
 public:
-  ArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
+  ArrayElementNode(IdentifierNode& identifier, int index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& identifier;
-  size_t index;
+  int index;
 };
 
 // deprecated
 class IntArrayElementNode : public ExpressionNode {
 public:
-  IntArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
+  IntArrayElementNode(IdentifierNode& identifier, int index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& identifier;
-  size_t index;
+  int index;
 };
 
 // deprecated
 class FloatArrayElementNode : public ExpressionNode {
 public:
-  FloatArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
+  FloatArrayElementNode(IdentifierNode& identifier, int index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& identifier;
-  size_t index;
+  int index;
 };
 
 // deprecated
 class CharArrayElementNode : public ExpressionNode { 
 public:
-  CharArrayElementNode(IdentifierNode& identifier, size_t index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
+  CharArrayElementNode(IdentifierNode& identifier, int index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
   IdentifierNode& identifier;
-  size_t index;
+  int index;
 };
 
 class FunctionCallNode : public ExpressionNode {
@@ -165,14 +164,14 @@ class VariableDeclarationNode : public StatementNode {
 public:
   VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), size(0), assignmentExpression(nullptr) {}
 
-  VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, size_t size, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), size(size), assignmentExpression(nullptr) {}
+  VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int size, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), size(size), assignmentExpression(nullptr) {}
 
   VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, 
     ExpressionNode *assignmentExpression, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), assignmentExpression(assignmentExpression) {}
 
   virtual llvm::Value* emitter(EmitContext &emitContext);
 public:
-  size_t size; // size != 0 means this is an array
+  int size; // size != 0 means this is an array
   IdentifierNode &type;
   IdentifierNode &identifier;
   ExpressionNode *assignmentExpression;
@@ -185,7 +184,7 @@ public:
   virtual llvm::Value* emitter(EmitContext &emitContext);
 public:
   IdentifierNode &type;
-  size_t size;
+  int size;
   IdentifierNode &identifier;
 };
 
