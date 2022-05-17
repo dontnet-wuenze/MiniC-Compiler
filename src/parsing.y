@@ -73,11 +73,20 @@ statements:
 statement: 
     var_decl 
     | func_decl
-    | expression {
+    | expression ';' {
         $$ = new ExpressionStatementNode(*$1, yylineno);
     }
-    | RETURN expression {
-        $$ = new ReturnStatementNode(*$2, yylineno));
+    | RETURN expression ';' {
+        $$ = new ReturnStatementNode(*$2, yylineno);
+    }
+    | BREAK ';' {
+        $$ = new BreakStatementNode(yylineno);
+    }
+    | IF '(' expression ')' block ELSE block {
+        $$ = new IfElseStatementNode(*$3, *$5, *$7, yylineno);
+    }
+    | WHILE '(' expression ')' block {
+        $$ = new WhileStatementNode(*$3, *$5, yylineno);
     };
 
 block: 
@@ -194,7 +203,7 @@ expression:
     | '(' expression ')' {
         $$ = $2;
     }
-    | identifier '[' expression ']' {
+    | identifier '[' expression ']' { // array element access
         $$ = new ArrayElementNode(*$1, $3, yylineno);
     }
     | const_value;
