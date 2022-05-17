@@ -152,6 +152,31 @@ public:
 	virtual llvm::Value* emitter(EmitContext &emitContext);
 };
 
+class BreakStatementNode : public StatementNode {
+public:
+	BreakStatementNode(int lineNo) : StatementNode(lineNo) {}
+	virtual llvm::Value* emitter(EmitContext &emitContext);
+};
+
+class IfElseStatementNode : public StatementNode {
+public:
+  IfElseStatementNode(ExpressionNode &expression, BlockNode &ifBlock, BlockNode &&elseBlock, int lineNo)
+    : StatementNode(lineNo), expression(expression), ifBlock(ifBlock), elseBlock(elseBlock) {}
+public:
+  ExpressionNode &expression;
+  BlockNode &ifBlock;
+  BlockNode &elseBlock;
+};
+
+class WhileStatementNode : public StatementNode {
+public:
+  WhileStatementNode(ExpressionNode &expression, BlockNode &block, int lineNo)
+    : StatementNode(lineNo), expression(expression), block(block) {}
+public:
+  ExpressionNode &expression;
+  BlockNode &block;
+};
+
 class ReturnStatementNode : public StatementNode {
 public:
   ReturnStatementNode(ExpressionNode &expression, int lineNo) : StatementNode(lineNo), expression(expression) {}
