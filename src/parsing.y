@@ -102,10 +102,10 @@ var_decl:
         $$ = new VariableDeclarationNode(*$1, *$2, yylineno);
     }
     | identifier identifier EQ expression {
-        $$ = new VariableDeclarationNode(*$1, *$2, *$4, yylineno);
+        $$ = new VariableDeclarationNode(*$1, *$2, $4, yylineno);
     }
     | identifier identifier '[' CONSTANT_INT ']' { // array
-        $$ = new VariableDeclarationNode(*$1, *$2, $4, yylineno);
+        $$ = new VariableDeclarationNode(*$1, *$2, $4->value, yylineno);
     }
     ;
 
@@ -204,7 +204,7 @@ expression:
         $$ = $2;
     }
     | identifier '[' expression ']' { // array element access
-        $$ = new ArrayElementNode(*$1, $3, yylineno);
+        $$ = new ArrayElementNode(*$1, *$3, yylineno);
     }
     | const_value;
 %%

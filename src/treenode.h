@@ -70,11 +70,11 @@ public:
 
 class ArrayElementNode : public ExpressionNode {
 public:
-  ArrayElementNode(IdentifierNode& identifier, int index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
+  ArrayElementNode(IdentifierNode& identifier, ExpressionNode &index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
 public:
-  IdentifierNode& identifier;
-  int index;
+  IdentifierNode &identifier;
+  ExpressionNode &index;
 };
 
 // deprecated
