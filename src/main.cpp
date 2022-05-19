@@ -3,17 +3,19 @@
 #include <llvm-10/llvm/Support/TargetSelect.h>
 
 extern int yyparse(void);
+extern BlockNode* programBlock;
 
 int main(){
     yyparse();
-    TreeNode* Root;//待定 暂不知如何得到root
+    //BlockNode* Root;
     EmitContext* generator = new EmitContext();
 
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    generator->Run(Root);
+    cout<<"program begin"<<endl;
+    generator->Run(programBlock);
 
     return 0;
 

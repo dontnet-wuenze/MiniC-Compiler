@@ -34,7 +34,6 @@
 %token <token> IF ELSE WHILE BREAK 
 
 
-
 %right ASSIGN
 %left OR
 %left AND
@@ -105,7 +104,7 @@ var_decl:
         $$ = new VariableDeclarationNode(*$1, *$2, $4, yylineno);
     }
     | identifier identifier '[' CONSTANT_INT ']' { // array
-        $$ = new VariableDeclarationNode(*$1, *$2, $4->value, yylineno);
+        $$ = new VariableDeclarationNode(*$1, *$2, atoi($4->c_str()), yylineno);
     }
     ;
 
@@ -120,10 +119,10 @@ func_decl_args:
     }
     | var_decl {
         $$ = new std::vector<VariableDeclarationNode*>();
-        $$->push_back($<var_decl>1);
+        $$->push_back($<variableDeclaration>1);
     }
     | func_decl_args ',' var_decl {
-        $1->push_back($<var_decl>3);
+        $1->push_back($<variableDeclaration>3);
     };
 
 identifier:
@@ -151,7 +150,7 @@ call_args:
         $$->push_back($1);
     }
     | call_args ',' expression {
-        $1->push->back($3);
+        $1->push_back($3);
     };
 
 expression:
