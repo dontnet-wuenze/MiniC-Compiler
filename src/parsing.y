@@ -27,7 +27,7 @@
 %token <token> INT FLOAT CHAR // int, float, char
 %token <token> PLUS MINUS MUL DIV // +, -, *, /
 %token <token> NOT AND OR // !, &&, ||
-%token <token> EQ NEQ LT GT LE GE // ==, !=, <, >, <=, >=
+%token <token> EQU NEQ LESST GREATERT LEQ GEQ // ==, !=, <, >, <=, >=
 %token <token> ASSIGN // =
 %token <token> LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE // ()[]{}
 %token <token> RETURN
@@ -37,7 +37,7 @@
 %right ASSIGN
 %left OR
 %left AND
-%left EQ NEQ LT GT LE GE
+%left EQU NEQ LESST GREATERT LEQ GEQ
 %left PLUS MINUS
 %left MUL DIV
 %right NOT
@@ -49,7 +49,7 @@
 %type <varibleDeclarationList> func_decl_args
 %type <expressionList> call_args
 %type <block> program statements block
-%type <token> comparison
+/* %type <token> comparison */
 
 %start program
 
@@ -100,7 +100,7 @@ var_decl:
     identifier identifier {
         $$ = new VariableDeclarationNode(*$1, *$2, yylineno);
     }
-    | identifier identifier EQ expression {
+    | identifier identifier EQU expression {
         $$ = new VariableDeclarationNode(*$1, *$2, $4, yylineno);
     }
     | identifier identifier '[' CONSTANT_INT ']' { // array
@@ -181,22 +181,22 @@ expression:
     | expression OR expression {
         $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
     }
-    | expression LT expression {
+    | expression LESST expression {
         $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
     }
-    | expression GT expression {
+    | expression GREATERT expression {
         $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
     }
-    | expression EQ expression {
+    | expression EQU expression {
         $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
     }
     | expression NEQ expression {
         $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
     }
-    | expression LE expression {
+    | expression LEQ expression {
         $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
     }
-    | expression GE expression {
+    | expression GEQ expression {
         $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
     }
     | '(' expression ')' {

@@ -174,19 +174,19 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
                 }
             }
         }
-        else if (op == EQ) {
+        else if (op == EQU) {
             return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOEQ(left, right, "fcmptmp") : myBuilder.CreateICmpEQ(left, right, "icmptmp");
         }
-        else if (op == GE) {
+        else if (op == GEQ) {
             return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOGE(left, right, "fcmptmp") : myBuilder.CreateICmpSGE(left, right, "icmptmp");
         }
-        else if (op == LE) {
+        else if (op == LEQ) {
             return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOLE(left, right, "fcmptmp") : myBuilder.CreateICmpSLE(left, right, "icmptmp");
         }
-        else if (op == GT) {
+        else if (op == GREATERT) {
             return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOGT(left, right, "fcmptmp") : myBuilder.CreateICmpSGT(left, right, "icmptmp");
         }
-        else if (op == LT) {
+        else if (op == LESST) {
             return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOLT(left, right, "fcmptmp") : myBuilder.CreateICmpSLT(left, right, "icmptmp");
         }
         else if (op == NEQ) {
