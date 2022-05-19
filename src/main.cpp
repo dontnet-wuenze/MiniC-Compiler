@@ -1,6 +1,6 @@
 #include "Emit.h"
 #include "treenode.h"
-#include <llvm-10/llvm/Support/TargetSelect.h>
+#include <llvm/Support/TargetSelect.h>
 
 extern int yyparse(void);
 extern BlockNode* programBlock;

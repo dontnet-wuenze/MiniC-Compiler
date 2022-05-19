@@ -1,9 +1,9 @@
 #include "Emit.h"
-#include <llvm-10/llvm/ADT/Twine.h>
-#include <llvm-10/llvm/IR/DerivedTypes.h>
-#include <llvm-10/llvm/IR/Function.h>
-#include <llvm-10/llvm/IR/Module.h>
-#include <llvm-10/llvm/Support/raw_ostream.h>
+#include <llvm/ADT/Twine.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 #include <vector>
 
 llvm::Function* EmitContext::getPrintf(){
