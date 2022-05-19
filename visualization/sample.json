@@ -1,0 +1,24 @@
+{
+    "children" : 
+    [
+        {
+            "children" : 
+            [
+                {
+                    "name" : "ID"
+                },
+                {
+                    "name" : "LB"
+                },
+                {
+                    "name" : "INT"
+                },
+                {
+                    "name" : "RB"
+                }
+            ],
+            "name" : "VarDec"
+        }
+    ],
+    "name" : "ExtDecList"
+}
