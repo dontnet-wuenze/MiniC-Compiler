@@ -17,4 +17,7 @@ tester/quicksort/windows-amd64.exe
 build/*
 .*/*
 
+*.exe
+
 src/token.cpp
+CMakeLists.txt
