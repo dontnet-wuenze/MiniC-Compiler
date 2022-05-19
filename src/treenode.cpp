@@ -1,14 +1,14 @@
 #include "treenode.h"
 #include "parsing.hpp"
 #include "Emit.h"
-#include <llvm-10/llvm/ADT/ArrayRef.h>
-#include <llvm-10/llvm/IR/Constants.h>
-#include <llvm-10/llvm/IR/Function.h>
-#include <llvm-10/llvm/IR/InstrTypes.h>
-#include <llvm-10/llvm/IR/Instruction.h>
-#include <llvm-10/llvm/IR/Instructions.h>
-#include <llvm-10/llvm/IR/Type.h>
-#include <llvm-10/llvm/IR/Value.h>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Value.h>
 #include <string>
 #include <vector>
 

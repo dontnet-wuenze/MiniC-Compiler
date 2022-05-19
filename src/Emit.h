@@ -1,5 +1,5 @@
-#include <llvm-10/llvm/IR/BasicBlock.h>
-#include <llvm-10/llvm/IR/Value.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Value.h>
 #include <stack>
 #include <string>
 #include <typeinfo>

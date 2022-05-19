@@ -3,10 +3,15 @@ project(Compiler)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(PkgConfig REQUIRED)
 
 find_package(LLVM REQUIRED CONFIG)
-pkg_check_modules(JSONCPP jsoncpp)
+
+if (APPLE) 
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(JSONCPP jsoncpp)
+else()
+    find_package(jsoncpp REQUIRED)
+endif()
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
