@@ -19,9 +19,9 @@ stack<llvm::BasicBlock *> GlobalAfterBB;
 //辅助函数
 
 llvm::Type* getLLvmType(string type){ //通过type，返回对应的LLVM的Type
-    if(type == "INT"){return llvm::Type::getInt32Ty(myContext);}
-    else if(type == "FLOAT"){return llvm::Type::getFloatTy(myContext);}
-    else if(type == "CHAR"){return llvm::Type::getInt8Ty(myContext);}
+    if(type == "int"){return llvm::Type::getInt32Ty(myContext);}
+    else if(type == "float"){return llvm::Type::getFloatTy(myContext);}
+    else if(type == "char"){return llvm::Type::getInt8Ty(myContext);}
     return llvm::Type::getVoidTy(myContext);
 }
 
@@ -92,7 +92,8 @@ llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
         std::cerr << "undeclared variable " << name << endl;
         return NULL;
     }
-    return new llvm::LoadInst(emitContext.getTop()[name], "", false, emitContext.getCurrentBlock());
+    llvm::Type* tp = emitContext.getTopType()[name];
+    return new llvm::LoadInst(tp,emitContext.getTop()[name], "LoadInst", false, emitContext.getCurrentBlock());
 }
 
 llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){  //返回了指向id[index]的指针，待定；
@@ -211,7 +212,7 @@ llvm::Value* BlockNode::emitter(EmitContext &emitContext){
         cout << "Generating code for " << typeid(*i).name() << endl;
         tmp = (*i).emitter(emitContext);
     }
-    cout << "BlockNode emit" << endl;
+    cout << "" << endl;
 	return tmp;
 }
 
@@ -293,8 +294,10 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){
         cout << "Creating variable declaration " << type.name << " " << identifier.name<< endl;
         string *p;
         p = &identifier.name;
+        emitContext.getTopType()[identifier.name] = llvmType;
         auto *block = emitContext.getCurrentBlock();
-        llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
+        //llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
+        llvm::Value* alloc = CreateEntryBlockAlloca(emitContext.currentFunc, identifier.name, llvmType);
         // llvm::Value* alloc = CreateEntryBlockAlloca(context->get);
         emitContext.getTop()[identifier.name] = alloc;
         if (assignmentExpression != NULL) {
@@ -324,8 +327,10 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
         argTypes.push_back(getLLvmType((*it).type.name));
     }
 	llvm::FunctionType *ftype = llvm::FunctionType::get(getLLvmType(type.name), makeArrayRef(argTypes), false);
-	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage, identifier.name.c_str(), emitContext.myModule);
+	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::CommonLinkage, identifier.name.c_str(), emitContext.myModule);
 	llvm::BasicBlock *bblock = llvm::BasicBlock::Create(myContext, "entry", function, 0);
+
+    emitContext.currentFunc = function;
 
 	emitContext.pushBlock(bblock);
 
