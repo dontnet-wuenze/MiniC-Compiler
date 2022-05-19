@@ -8,7 +8,7 @@ find_package(jsoncpp REQUIRED)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
-add_executable(Compiler src/Emit.cpp src/Emit.h src/treenode.cpp src/treenode.h src/main.cpp)
+add_executable(Compiler src/Emit.cpp src/Emit.h src/treenode.cpp src/treenode.h src/main.cpp src/parsing.cpp src/parsing.hpp src/lex.yy.cc)
 set(LLVM_LINK_COMPONENTS
     Core
     ExecutionEngine

@@ -7,6 +7,8 @@ E            ([Ee][+-]?{D}+)
 #include <stdio.h>
 #include <iostream>
 #include <string>
+#include "treenode.h"
+#include "parsing.hpp"
 
 #define SAVE_TOKEN yylval.string = new std::string(yytext, yyleng)
 #define TOKEN(t) (yylval.token = t)
@@ -25,19 +27,19 @@ void comment(void);
 "//"[^\n]*      { /* consume //-comment */ }
 
     /* match all the necessary keywords */
-"bool"          { count(); return TOKEN(BOOL);     } // TODO: remove this line, we do not support bool type, use int instead.
+ /*"bool"          { count(); return TOKEN(BOOL);     }*/ // TODO: remove this line, we do not support bool type, use int instead.
 "break"         { count(); return TOKEN(BREAK);    }
 "char"          { count(); return TOKEN(CHAR);     }
-"continue"      { count(); return TOKEN(CONTINUE); }
-"else"          { count(); return TOKEN(ELSE);     }
-"false"         { count(); return TOKEN(FALSE);    }
+ /*"continue"      { count(); return TOKEN(CONTINUE); }*/
+ /*"else"          { count(); return TOKEN(ELSE);     }*/
+ /*"false"         { count(); return TOKEN(FALSE);    }*/
 "float"         { count(); return TOKEN(FLOAT);    }
-"for"           { count(); return TOKEN(FOR);      }
+ /*"for"           { count(); return TOKEN(FOR);      }*/
 "if"            { count(); return TOKEN(IF);       }
 "int"           { count(); return TOKEN(INT);      }
 "return"        { count(); return TOKEN(RETURN);   }
-"true"          { count(); return TOKEN(TRUE);     }
-"void"          { count(); return TOKEN(VOID);     }
+ /*"true"          { count(); return TOKEN(TRUE);     }*/
+ /*"void"          { count(); return TOKEN(VOID);     }*/
 "while"         { count(); return TOKEN(WHILE);    }
 
     /* identifiers */
@@ -49,7 +51,7 @@ void comment(void);
 [1-9]{D}*                { count(); SAVE_TOKEN; return CONSTANT_INT; /* decimal */     }
 
 \'.\'|\'\\.\'            { count(); SAVE_TOKEN; return CONSTANT_CHAR; /* character */  }
-L?'(\\.|[^\\'\n])+'      { count(); SAVE_TOKEN; return CONSTANT_STRING; /* string */   }
+ /*L?'(\\.|[^\\'\n])+'      { count(); SAVE_TOKEN; return CONSTANT_STRING; *//* string */   /*}*/
 
 
 {D}+{E}                  { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }

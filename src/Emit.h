@@ -37,7 +37,9 @@ public:
 
 
 class EmitContext{
+public:
     stack<basic_block *> block_stack; //llvm::block栈
+    stack<llvm::Function*> funStack; //函数栈
 
 
 public:
@@ -47,7 +49,7 @@ public:
     EmitContext();
     //~EmitContext();
 
-    map<string, llvm::Value*>& getTop() { 
+    map<string, llvm::Value*>& getTop() {  //得到basic_block栈顶部的basic_block的局部变量map
         return block_stack.top()-> local_var; 
         }
     
@@ -75,8 +77,12 @@ public:
         block_stack.top()->return_value = value;
     }
 
+    llvm::Function* getCurFunction();
+    void pushFunction(llvm::Function* func);
+    void popFunction();
+
     llvm::Function* getPrintf(); //得到llvm形式的printf函数
     llvm::Function* getScanf(); //得到llvm形式的scanf函数
-    void Run(TreeNode* Root); //对根节点进行run--------------------此处假定parser最开始的根节点为TreeNode
+    void Run(BlockNode* Root); //对根节点进行run--------------------此处假定parser最开始的根节点为TreeNode
 
 };

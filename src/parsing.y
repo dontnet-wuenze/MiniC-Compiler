@@ -34,7 +34,6 @@
 %token <token> IF ELSE WHILE BREAK 
 
 
-
 %right ASSIGN
 %left OR
 %left AND
@@ -73,11 +72,20 @@ statements:
 statement: 
     var_decl 
     | func_decl
-    | expression {
+    | expression ';' {
         $$ = new ExpressionStatementNode(*$1, yylineno);
     }
-    | RETURN expression {
-        $$ = new ReturnStatementNode(*$2, yylineno));
+    | RETURN expression ';' {
+        $$ = new ReturnStatementNode(*$2, yylineno);
+    }
+    | BREAK ';' {
+        $$ = new BreakStatementNode(yylineno);
+    }
+    | IF '(' expression ')' block ELSE block {
+        $$ = new IfElseStatementNode(*$3, *$5, *$7, yylineno);
+    }
+    | WHILE '(' expression ')' block {
+        $$ = new WhileStatementNode(*$3, *$5, yylineno);
     };
 
 block: 
@@ -93,10 +101,10 @@ var_decl:
         $$ = new VariableDeclarationNode(*$1, *$2, yylineno);
     }
     | identifier identifier EQ expression {
-        $$ = new VariableDeclarationNode(*$1, *$2, *$4, yylineno);
-    }
-    | identifier identifier '[' INT ']' { // array
         $$ = new VariableDeclarationNode(*$1, *$2, $4, yylineno);
+    }
+    | identifier identifier '[' CONSTANT_INT ']' { // array
+        $$ = new VariableDeclarationNode(*$1, *$2, atoi($4->c_str()), yylineno);
     }
     ;
 
@@ -111,10 +119,10 @@ func_decl_args:
     }
     | var_decl {
         $$ = new std::vector<VariableDeclarationNode*>();
-        $$->push_back($<var_decl>1);
+        $$->push_back($<variableDeclaration>1);
     }
     | func_decl_args ',' var_decl {
-        $1->push_back($<var_decl>3);
+        $1->push_back($<variableDeclaration>3);
     };
 
 identifier:
@@ -123,16 +131,79 @@ identifier:
     };
 
 const_value: 
-    INT {
+    CONSTANT_INT {
         $$ = new IntNode(atoi($1->c_str()), yylineno);
     }
-    | FLOAT {
+    | CONSTANT_FLOAT {
         $$ = new FloatNode(atof($1->c_str()), yylineno);
     }
-    | CHAR {
-        $$ = new CharNode()
+    | CONSTANT_CHAR {
+        $$ = new CharNode($1->at(0), yylineno);
+    };
+
+call_args:
+    {
+        $$ = new std::vector<ExpressionNode*>();
     }
+    | expression {
+        $$ = new std::vector<ExpressionNode*>();
+        $$->push_back($1);
+    }
+    | call_args ',' expression {
+        $1->push_back($3);
+    };
 
 expression:
-    identifier '=' expression
+    identifier '=' expression {
+        $$ = new AssignmentNode(*$<identifier>1, *$3, yylineno);
+    }
+    | identifier '(' call_args ')' {
+        $$ = new FunctionCallNode(*$1, *$3, yylineno);
+    }
+    | identifier {
+        $<identifier>$ = $1;
+    }
+    | expression MUL expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression DIV expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression PLUS expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression MINUS expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression AND expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression OR expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression LT expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression GT expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression EQ expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression NEQ expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression LE expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | expression GE expression {
+        $$ = new BinaryOpNode($2, *$1, *$3, yylineno);
+    }
+    | '(' expression ')' {
+        $$ = $2;
+    }
+    | identifier '[' expression ']' { // array element access
+        $$ = new ArrayElementNode(*$1, *$3, yylineno);
+    }
+    | const_value;
 %%

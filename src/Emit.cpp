@@ -29,7 +29,19 @@ llvm::Function* EmitContext::getScanf(){
     return scanf_func;
 }
 
-void EmitContext::Run(TreeNode *Root){
+llvm::Function* EmitContext:: getCurFunction(){
+    return funStack.top();
+}
+
+void EmitContext::pushFunction(llvm::Function* func){
+    funStack.push(func);
+}
+
+void EmitContext::popFunction(){
+    funStack.pop();
+}
+
+void EmitContext::Run(BlockNode* Root){
     Root->emitter(*this);
     this->myModule->print(llvm::outs(), nullptr);
 }
