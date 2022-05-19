@@ -70,7 +70,7 @@ statements:
     };
 
 statement: 
-    var_decl 
+    var_decl ';'
     | func_decl
     | expression ';' {
         $$ = new ExpressionStatementNode(*$1, yylineno);

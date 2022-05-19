@@ -2,9 +2,13 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
 #include <vector>
 #include "Emit.h"
+
+llvm::LLVMContext myContext; //定义全局context
+llvm::IRBuilder<> myBuilder(myContext); //定义全局IRbuilder
 
 llvm::Function* EmitContext::getPrintf(){
     vector<llvm::Type*> printf_arg_types; //printf内参数的类型
@@ -43,6 +47,7 @@ void EmitContext::popFunction(){
 
 void EmitContext::Run(BlockNode* Root){
     Root->emitter(*this);
+    llvm::verifyModule(*this->myModule, &llvm::outs());
     this->myModule->print(llvm::outs(), nullptr);
 }
 

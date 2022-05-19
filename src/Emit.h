@@ -1,5 +1,6 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Value.h>
+#include <map>
 #include <stack>
 #include <string>
 #include <typeinfo>
@@ -25,14 +26,15 @@
 
 using namespace std;
 
-static llvm::LLVMContext myContext; //定义全局context
-static llvm::IRBuilder<> myBuilder(myContext); //定义全局IRbuilder
+extern llvm::LLVMContext myContext; //定义全局context
+extern llvm::IRBuilder<> myBuilder; //定义全局IRbuilder
 
 class basic_block{ 
 public:
     llvm::BasicBlock *block;
     llvm::Value* return_value;
     map<string, llvm::Value*> local_var; //局部变量map
+    map<string, llvm::Type*> local_var_type;//局部变量string-llvm::type的map
 };
 
 
@@ -45,6 +47,7 @@ public:
 public:
     llvm::Module *myModule; 
     llvm::Function *printf,*scanf;
+    llvm::Function* currentFunc;
 
     EmitContext();
     //~EmitContext();
@@ -52,6 +55,9 @@ public:
     map<string, llvm::Value*>& getTop() {  //得到basic_block栈顶部的basic_block的局部变量map
         return block_stack.top()-> local_var; 
         }
+    map<string, llvm::Type*>& getTopType(){
+        return block_stack.top()->local_var_type;
+    }
     
     llvm::BasicBlock *getCurrentBlock(){
         return block_stack.top()->block;

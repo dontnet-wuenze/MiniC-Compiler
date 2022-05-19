@@ -29,14 +29,14 @@ void comment(void);
     /* match all the necessary keywords */
  /*"bool"          { count(); return TOKEN(BOOL);     }*/ // TODO: remove this line, we do not support bool type, use int instead.
 "break"         { count(); return TOKEN(BREAK);    }
-"char"          { count(); return TOKEN(CHAR);     }
+ /* "char"          { count(); return TOKEN(CHAR);     }*/
  /*"continue"      { count(); return TOKEN(CONTINUE); }*/
  /*"else"          { count(); return TOKEN(ELSE);     }*/
  /*"false"         { count(); return TOKEN(FALSE);    }*/
-"float"         { count(); return TOKEN(FLOAT);    }
+ /* "float"         { count(); return TOKEN(FLOAT);    }*/
  /*"for"           { count(); return TOKEN(FOR);      }*/
 "if"            { count(); return TOKEN(IF);       }
-"int"           { count(); return TOKEN(INT);      }
+ /*"int"           { count(); return TOKEN(INT);      }*/
 "return"        { count(); return TOKEN(RETURN);   }
  /*"true"          { count(); return TOKEN(TRUE);     }*/
  /*"void"          { count(); return TOKEN(VOID);     }*/
