@@ -291,20 +291,31 @@ llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
 llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){  
     if(size == 0){
         llvm::Type* llvmType = getLLvmType(type.name);
-        cout << "Creating variable declaration " << type.name << " " << identifier.name<< endl;
-        string *p;
-        p = &identifier.name;
-        emitContext.getTopType()[identifier.name] = llvmType;
-        auto *block = emitContext.getCurrentBlock();
-        //llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
-        llvm::Value* alloc = CreateEntryBlockAlloca(emitContext.currentFunc, identifier.name, llvmType);
-        // llvm::Value* alloc = CreateEntryBlockAlloca(context->get);
-        emitContext.getTop()[identifier.name] = alloc;
-        if (assignmentExpression != NULL) {
-        AssignmentNode assn(identifier, *assignmentExpression,lineNo);
-        assn.emitter(emitContext);
+        
+        // 若当前函数为空, 说明是全局变量
+        if(emitContext.currentFunc == nullptr) {
+            cout << "Creating global variable declaration " << type.name << " " << identifier.name<< endl;
+            llvm::Value *tmp = emitContext.myModule->getGlobalVariable(identifier.name, true);
+            if(tmp != nullptr){
+                throw logic_error("Redefined Global Variable: " + identifier.name);
+            }
+            llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(*(emitContext.myModule), llvmType, false, llvm::GlobalValue::PrivateLinkage, 0, identifier.name);
+            globalVar->setInitializer(llvm::ConstantInt::get(llvmType, 0));
+            return nullptr;
+        } else {
+            cout << "Creating local variable declaration " << type.name << " " << identifier.name<< endl;
+            emitContext.getTopType()[identifier.name] = llvmType;
+            auto *block = emitContext.getCurrentBlock();
+            llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
+            //llvm::Value* alloc = CreateEntryBlockAlloca(emitContext.currentFunc, identifier.name, llvmType);
+            // llvm::Value* alloc = CreateEntryBlockAlloca(context->get);
+            emitContext.getTop()[identifier.name] = alloc;
+            if (assignmentExpression != NULL) {
+                AssignmentNode assn(identifier, *assignmentExpression,lineNo);
+                assn.emitter(emitContext);
+            }
+            return alloc;
         }
-        return alloc;
     }
     else{ //数组
         //llvm::Value *tmp = myBuilder.GetInsertBlock()->getParent()->getValueSymbolTable()->lookup(identifier.name);
@@ -348,6 +359,7 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 	llvm::ReturnInst::Create(myContext, emitContext.getReturnValue(), bblock);
 
 	emitContext.popBlock();
+    emitContext.currentFunc = nullptr;
 	std::cout << "Creating function: " << identifier.name << endl;
 	return function;
 }
