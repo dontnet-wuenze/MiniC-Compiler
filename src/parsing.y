@@ -24,24 +24,20 @@
 
 %token <string> IDENTIFIER 
 %token <string> CONSTANT_INT CONSTANT_FLOAT CONSTANT_CHAR // 1, 1.0, 'a'
-%token <token> INT FLOAT CHAR // int, float, char
 %token <token> PLUS MINUS MUL DIV // +, -, *, /
-%token <token> NOT AND OR // !, &&, ||
+%token <token> AND OR // !, &&, ||
 %token <token> EQU NEQ LESST GREATERT LEQ GEQ // ==, !=, <, >, <=, >=
-%token <token> ASSIGN // =
-%token <token> LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE // ()[]{}
 %token <token> RETURN
 %token <token> IF ELSE WHILE BREAK 
 
 
-%right ASSIGN
 %left OR
 %left AND
 %left EQU NEQ LESST GREATERT LEQ GEQ
 %left PLUS MINUS
 %left MUL DIV
-%right NOT
-%left LPAREN RPAREN LBRACKET RBRACKET
+%right '!'
+%left '(' ')' '[' ']'
 
 %type <identifier> identifier
 %type <expression> const_value expression
@@ -100,7 +96,7 @@ var_decl:
     identifier identifier {
         $$ = new VariableDeclarationNode(*$1, *$2, yylineno);
     }
-    | identifier identifier '=`' expression {
+    | identifier identifier '=' expression {
         $$ = new VariableDeclarationNode(*$1, *$2, $4, yylineno);
     }
     | identifier identifier '[' CONSTANT_INT ']' { // array
@@ -204,6 +200,9 @@ expression:
     }
     | identifier '[' expression ']' { // array element access
         $$ = new ArrayElementNode(*$1, *$3, yylineno);
+    }
+    | identifier '[' expression ']' '=' expression { // array element access
+        $$ = new ArrayElementAssignNode(*$1, *$3, *$6, yylineno);
     }
     | const_value;
 %%

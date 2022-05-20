@@ -78,6 +78,16 @@ public:
   ExpressionNode  &index;
 };
 
+class ArrayElementAssignNode : public ExpressionNode {   //identifier[expression] 表示数组中某个元素
+public:
+  ArrayElementAssignNode(IdentifierNode &identifier, ExpressionNode &index, ExpressionNode &rhs, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index), rhs(rhs) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+public:
+  IdentifierNode& identifier;
+  ExpressionNode &index;
+  ExpressionNode &rhs;
+};
+
 // deprecated
 // class IntArrayElementNode : public ExpressionNode {
 // public:
