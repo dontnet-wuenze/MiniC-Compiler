@@ -73,7 +73,7 @@ llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::Stri
 
 llvm::Value* IntNode::emitter(EmitContext &emitContext){
     cout << "IntNode : " << value <<endl;
-    return llvm::ConstantInt::get(llvm::Type::getInt64Ty(myContext),value,true);
+    return llvm::ConstantInt::get(llvm::Type::getInt32Ty(myContext),value,true);
 }
 
 llvm::Value* FloatNode::emitter(EmitContext &emitContext){
@@ -327,7 +327,7 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
         argTypes.push_back(getLLvmType((*it).type.name));
     }
 	llvm::FunctionType *ftype = llvm::FunctionType::get(getLLvmType(type.name), makeArrayRef(argTypes), false);
-	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::CommonLinkage, identifier.name.c_str(), emitContext.myModule);
+	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, identifier.name.c_str(), emitContext.myModule);
 	llvm::BasicBlock *bblock = llvm::BasicBlock::Create(myContext, "entry", function, 0);
 
     emitContext.currentFunc = function;
