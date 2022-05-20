@@ -93,7 +93,7 @@ llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
         return NULL;
     }
     llvm::Type* tp = emitContext.getTopType()[name];
-    return new llvm::LoadInst(tp,emitContext.getTop()[name], "LoadInst", false, emitContext.getCurrentBlock());
+    return new llvm::LoadInst(tp,emitContext.getTop()[name], "LoadInst", false, myBuilder.GetInsertBlock());
 }
 
 llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){  //返回了指向id[index]的指针，待定；
@@ -124,7 +124,7 @@ llvm::Value* FunctionCallNode::emitter(EmitContext &emitContext){
         tmp.push_back((*i).emitter(emitContext));
     }
     //调用
-    llvm::CallInst *call = llvm::CallInst::Create(func,llvm::makeArrayRef(tmp),"",emitContext.getCurrentBlock());
+    llvm::CallInst *call = llvm::CallInst::Create(func,llvm::makeArrayRef(tmp),"",myBuilder.GetInsertBlock());
     cout << "Creating method call: " << identifier.name << endl;
 	return call;
 
@@ -141,7 +141,7 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
         else if(op == MINUS){bi_op = llvm::Instruction::Sub;}
         else if(op == MUL){bi_op = llvm::Instruction::Mul;}
         else if(op == DIV){bi_op = llvm::Instruction::SDiv;}
-        return llvm::BinaryOperator::Create(bi_op,lhs.emitter(emitContext),rhs.emitter(emitContext),"",emitContext.getCurrentBlock());
+        return llvm::BinaryOperator::Create(bi_op,left,right,"", myBuilder.GetInsertBlock());
     }
     else if(op == AND){
         if (left->getType() != llvm::Type::getInt1Ty(myContext) || right->getType() != llvm::Type::getInt1Ty(myContext)) {
@@ -203,7 +203,8 @@ llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
         cerr << "undeclared variable " << lhs.name << endl;
 		return NULL;
     }
-    return new llvm::StoreInst(rhs.emitter(emitContext), emitContext.getTop()[lhs.name], false, emitContext.getCurrentBlock());
+    auto CurrentBlock = myBuilder.GetInsertBlock();
+    return new llvm::StoreInst(rhs.emitter(emitContext), emitContext.getTop()[lhs.name], false, CurrentBlock);
 }
 
 llvm::Value* BlockNode::emitter(EmitContext &emitContext){
@@ -254,13 +255,13 @@ llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
 llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
     cout << "Generating code for while "<<endl;
 
-    llvm::Function *TheFunction = myBuilder.GetInsertBlock()->getParent();
+    llvm::Function *TheFunction = emitContext.currentFunc;
 
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(myContext, "cond", TheFunction);
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(myContext, "loop", TheFunction);
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(myContext, "afterLoop", TheFunction);
 
-     GlobalAfterBB.push(afterBB);
+    GlobalAfterBB.push(afterBB);
 
     myBuilder.CreateBr(condBB);
     myBuilder.SetInsertPoint(condBB);
@@ -283,9 +284,9 @@ llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
 llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
     cout << "Generating return code for " << typeid(expression).name() << endl;
 	llvm::Value *rv = expression.emitter(emitContext);
-	emitContext.setReturnValue(rv);
-	return rv;
-    //return myBuilder.CreateRet(rv);
+	//emitContext.setReturnValue(rv);
+	//return rv;
+    return myBuilder.CreateRet(rv);
 }
 
 llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){  
@@ -305,7 +306,8 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){
         } else {
             cout << "Creating local variable declaration " << type.name << " " << identifier.name<< endl;
             emitContext.getTopType()[identifier.name] = llvmType;
-            auto *block = emitContext.getCurrentBlock();
+            //auto *block = myBuilder.GetInsertBlock();
+            auto *block = myBuilder.GetInsertBlock();
             llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
             //llvm::Value* alloc = CreateEntryBlockAlloca(emitContext.currentFunc, identifier.name, llvmType);
             // llvm::Value* alloc = CreateEntryBlockAlloca(context->get);
@@ -344,6 +346,7 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
     emitContext.currentFunc = function;
 
 	emitContext.pushBlock(bblock);
+    myBuilder.SetInsertPoint(bblock);
 
 	llvm::Function::arg_iterator argsValues = function->arg_begin();
     llvm::Value* argumentValue;
@@ -356,7 +359,8 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 	}
 	
 	block.emitter(emitContext);
-	llvm::ReturnInst::Create(myContext, emitContext.getReturnValue(), bblock);
+    //auto returnBlock = myBuilder.GetInsertBlock();
+	//llvm::ReturnInst::Create(myContext, emitContext.getReturnValue(), returnBlock);
 
 	emitContext.popBlock();
     emitContext.currentFunc = nullptr;
