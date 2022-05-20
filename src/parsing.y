@@ -100,7 +100,7 @@ var_decl:
     identifier identifier {
         $$ = new VariableDeclarationNode(*$1, *$2, yylineno);
     }
-    | identifier identifier EQU expression {
+    | identifier identifier '=`' expression {
         $$ = new VariableDeclarationNode(*$1, *$2, $4, yylineno);
     }
     | identifier identifier '[' CONSTANT_INT ']' { // array

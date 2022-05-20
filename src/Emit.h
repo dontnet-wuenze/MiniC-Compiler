@@ -12,6 +12,7 @@
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/CallingConv.h>
+#include <llvm/IR/GlobalVariable.h>
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/Bitcode/BitcodeReader.h>
