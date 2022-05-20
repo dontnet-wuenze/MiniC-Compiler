@@ -230,10 +230,9 @@ llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
             cerr << "undeclared variable " << lhs.name << endl;
 		return NULL;
         }
-        else{
-            
+        else{   
             result = emitContext.getTop()[lhs.name];
-            emitContext.getTop()[lhs.name] = right;
+            //emitContext.getTop()[lhs.name] = right;
         }
     }
     auto CurrentBlock = myBuilder.GetInsertBlock();
