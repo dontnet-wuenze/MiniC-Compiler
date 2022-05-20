@@ -20,4 +20,7 @@ build/*
 *.exe
 
 src/token.cpp
+src/lex.yy.cc
+src/parsing.cpp
+src/parsing.hpp
 CMakeLists.txt
