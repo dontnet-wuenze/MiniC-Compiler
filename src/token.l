@@ -128,5 +128,5 @@ void count(void)
         else
             column++;
 
-    ECHO;
+    
 }
