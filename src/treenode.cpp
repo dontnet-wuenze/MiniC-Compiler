@@ -107,6 +107,30 @@ llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){  //返回了�
     //return myBuilder.CreateAlignedLoad(elePtr, 4);
 }
 
+llvm::Value* ArrayElementAssignNode::emitter(EmitContext &emitContext){
+    cout<<"assign for arrayElementNode:"<<identifier.name<<"[]"<<endl;
+
+    llvm::Value* arrayValue = emitContext.myModule->getGlobalVariable(identifier.name, true);//在全局中查找数组名
+    if(arrayValue == nullptr){
+        if(emitContext.getTop().find(identifier.name) == emitContext.getTop().end()){ //局部中也未找到对应identifier
+            cerr << "undeclared array " << identifier.name << endl;
+		return NULL;
+        }
+        else{
+            arrayValue = emitContext.getTop()[identifier.name];
+        }
+    }
+    // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
+    llvm::Value* indexValue = index.emitter(emitContext);
+    vector<llvm::Value*> indexList;
+    indexList.push_back(myBuilder.getInt32(0));
+    indexList.push_back(indexValue);
+    llvm::Value* left =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
+    llvm::Value *right = rhs.emitter(emitContext);
+    return myBuilder.CreateStore(right, left);
+    //return nullptr;
+}
+
 // llvm::Value* IntArrayElementNode::emitter(EmitContext &emitContext){}//-----------  -_-
 // llvm::Value* FloatArrayElementNode::emitter(EmitContext &emitContext){}//-----------  -_-
 // llvm::Value* CharArrayElementNode::emitter(EmitContext &emitContext){}//-----------  -_-
@@ -199,12 +223,23 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
 
 llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
     cout << "AssignmentNode,lhs: " << lhs.name << endl;
-    if(emitContext.getTop().find(lhs.name) == emitContext.getTop().end()){ //未找到对应identifier
-        cerr << "undeclared variable " << lhs.name << endl;
+    llvm::Value* result = emitContext.myModule->getGlobalVariable(lhs.name, true);//在全局中查找变量
+    llvm::Value* right = rhs.emitter(emitContext);
+    if(result == nullptr){
+        if(emitContext.getTop().find(lhs.name) == emitContext.getTop().end()){ //局部中也未找到对应identifier
+            cerr << "undeclared variable " << lhs.name << endl;
 		return NULL;
+        }
+        else{
+            
+            result = emitContext.getTop()[lhs.name];
+            emitContext.getTop()[lhs.name] = right;
+        }
     }
     auto CurrentBlock = myBuilder.GetInsertBlock();
-    return new llvm::StoreInst(rhs.emitter(emitContext), emitContext.getTop()[lhs.name], false, CurrentBlock);
+    //return new llvm::StoreInst(rhs.emitter(emitContext), emitContext.getTop()[lhs.name], false, CurrentBlock);
+    
+    return new llvm::StoreInst(right, result, false, CurrentBlock);
 }
 
 llvm::Value* BlockNode::emitter(EmitContext &emitContext){
@@ -290,7 +325,7 @@ llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
 }
 
 llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){  
-    if(size == 0){
+    if(size == 0){ //普通变量
         llvm::Type* llvmType = getLLvmType(type.name);
         
         // 若当前函数为空, 说明是全局变量
@@ -320,16 +355,34 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){
         }
     }
     else{ //数组
-        //llvm::Value *tmp = myBuilder.GetInsertBlock()->getParent()->getValueSymbolTable()->lookup(identifier.name);
-        // if(tmp != nullptr){
-        //     throw logic_error("Redefined Variable: " + it.first);
-        // }
-        if(emitContext.getTop().find(identifier.name) != emitContext.getTop().end()){
-            throw logic_error("Redefined Variable: " + identifier.name);
+        llvm::Type* llvmType = getArrayLLvmType(type.name, size); 
+        if(emitContext.currentFunc == nullptr) { //当前函数为空，为全局数组定义
+            cout << "Creating global array declaration " << type.name << " " << identifier.name<< endl;
+            llvm::Value *tmp = emitContext.myModule->getGlobalVariable(identifier.name, true);
+            if(tmp != nullptr){
+                throw logic_error("Redefined Global Array: " + identifier.name);
+            }
+            llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(*(emitContext.myModule), llvmType, false, llvm::GlobalValue::PrivateLinkage, 0, identifier.name);
+            
+            std::vector<llvm::Constant*> constArrayElem;
+            llvm::Constant* constElem = llvm::ConstantInt::get(llvmType->getArrayElementType(), 0);
+            for (int i = 0; i < llvmType->getArrayNumElements(); i++) {
+                constArrayElem.push_back(constElem);
+            }
+            llvm::Constant* constArray = llvm::ConstantArray::get(llvm::ArrayType::get(llvmType->getArrayElementType(), llvmType->getArrayNumElements()), constArrayElem);
+            globalVar->setInitializer(constArray);
+            return nullptr;
+            
         }
-        llvm::Type* arrType = getArrayLLvmType(type.name, size);           
-        llvm::Value* alloc = CreateEntryBlockAlloca(myBuilder.GetInsertBlock()->getParent(), identifier.name, arrType);
-        return alloc;
+        else{
+            cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;
+            emitContext.getTopType()[identifier.name] = llvmType;
+            auto *block = myBuilder.GetInsertBlock();
+            llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
+            emitContext.getTop()[identifier.name] = alloc;
+            return alloc;
+
+        }
     }
 
 }
