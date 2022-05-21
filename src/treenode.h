@@ -65,6 +65,15 @@ public:
   char value;
 };
 
+class StringNode : public ExpressionNode {
+public:
+  StringNode(string &value, int lineNo) : ExpressionNode(lineNo), value(value) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
+public:
+  string &value;
+};
+
 class IdentifierNode : public ExpressionNode {
 public:
   IdentifierNode(string &name, int lineNo) : ExpressionNode(lineNo), name(name) {}

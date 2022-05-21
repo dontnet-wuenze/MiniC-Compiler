@@ -485,6 +485,12 @@ void CharNode::generateJson(string &s) {
     s.append("}");
 }
 
+void StringNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"StringValue: " + this->value + "\"\n");
+    s.append("}");
+}
+
 void IdentifierNode::generateJson(string &s) {
     s.append("\n{\n");
     s.append("\"name\" : \"Identifier: " + this->name + "\"\n");
