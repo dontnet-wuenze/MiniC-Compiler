@@ -86,6 +86,22 @@ llvm::Value* CharNode::emitter(EmitContext &emitContext){  //----------  -_-
     return myBuilder.getInt8(this->value);
 }
 
+llvm::Value* StringNode::emitter(EmitContext &emitContext) {
+    cout << "StringNode : " << value <<endl;
+    string str = value.substr(1, value.length() - 2);
+    string after = string(1, '\n');
+    str = str.replace(str.find("\\n"), 2, after);
+    llvm::Constant *strConst = llvm::ConstantDataArray::getString(myContext, str);
+    
+    llvm::Value *globalVar = new llvm::GlobalVariable(*(emitContext.myModule), strConst->getType(), true, llvm::GlobalValue::PrivateLinkage, strConst, "_Const_String_");
+    vector<llvm::Value*> indexList;
+    indexList.push_back(myBuilder.getInt32(0));
+    indexList.push_back(myBuilder.getInt32(0));
+    // var value
+    llvm::Value * varPtr = myBuilder.CreateInBoundsGEP(globalVar, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
+    return varPtr;
+}
+
 llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
     cout << "IdentifierNode : " << name << endl;
 

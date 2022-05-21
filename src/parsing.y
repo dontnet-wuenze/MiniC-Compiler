@@ -134,7 +134,7 @@ const_value:
         $$ = new FloatNode(atof($1->c_str()), yylineno);
     }
     | CONSTANT_CHAR {
-        $$ = new CharNode($1->at(0), yylineno);
+        $$ = new CharNode($1->at(1), yylineno);
     }
     | CONSTANT_STRING {
         $$ = new StringNode(*$1, yylineno);

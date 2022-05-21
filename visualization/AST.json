@@ -1,0 +1,49 @@
+
+{
+"name" : "Block",
+"children" : 
+[
+{
+"name" : "FunctionDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: main"
+},
+{
+"name" : "Block",
+"children" : 
+[
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "IntValue: 2"
+}
+]
+},
+{
+"name" : "ReturnStatement",
+"children" : 
+[
+{
+"name" : "IntValue: 0"
+}
+]
+}
+]
+}
+]
+}
+]
+}
