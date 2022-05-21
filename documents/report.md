@@ -2,7 +2,7 @@
 
 
 ## 摘要 
-![pipeline](/Users/boris/SchoolProjects/MiniC-Compiler/documents/report.assets/pipeline.png)
+![pipeline](report.assets/pipeline.png)
 
 
 ## 目录
@@ -90,7 +90,7 @@ user's code
 
 flex 和 bison 会将输入的程序文本解析为语法树 (AST, Abstract syntax tree) 的形式。我们先根据我们的实际需求，定义了语法树的节点类型。
 
-![NodeClassHierachy](/Users/boris/SchoolProjects/MiniC-Compiler/documents/report.assets/NodeClassHierachy.png)
+![NodeClassHierachy](report.assets/NodeClassHierachy.png)
 
 ### 实现 parsing.y
 
