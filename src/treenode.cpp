@@ -539,12 +539,42 @@ void FunctionCallNode::generateJson(string &s) {
     s.append("}");
 }
 
+string getOpStr(int op) {
+    string opStr;
+    switch (op) {
+    case PLUS : { opStr = "+"; break;}
+    case MINUS : { opStr = "-"; break;}
+    case MUL : { opStr = "*"; break;}
+    case DIV : { opStr = "/"; break;}
+    case OR : { opStr = "||"; break;}
+    case AND : { opStr = "&&"; break;}
+    case EQU : { opStr = "=="; break;}
+    case NEQ : { opStr = "!="; break;}
+    case LESST : { opStr = "<"; break;}
+    case GREATERT : { opStr = ">"; break;}
+    case LEQ : { opStr = "<="; break;}
+    case GEQ : { opStr = ">="; break;}
+    default: {
+        cout << "ERROR" << op << endl;
+    }
+    }
+    return opStr;
+}
+
 void BinaryOpNode::generateJson(string &s) {
     s.append("\n{\n");
     s.append("\"name\" : \"BinaryOperation\",\n");
     s.append("\"children\" : \n[");
     
     this->lhs.generateJson(s);
+    s.append(",");
+    
+    string opStr = getOpStr(this->op);
+
+    s.append("\n{\n");
+    s.append("\"name\" : \"" + opStr + "\"\n");
+    s.append("}");
+
     s.append(",");
     this->rhs.generateJson(s);
 
@@ -655,6 +685,7 @@ void FunctionDeclarationNode::generateJson(string &s) {
     s.append("\"children\" : \n[");
     
     this->type.generateJson(s);
+    s.append(",");
     this->identifier.generateJson(s);
     
     s.append(",");
