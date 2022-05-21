@@ -31,7 +31,7 @@ void comment(void);
 "break"         { count(); return TOKEN(BREAK);    }
  /* "char"          { count(); return TOKEN(CHAR);     }*/
  /*"continue"      { count(); return TOKEN(CONTINUE); }*/
- /*"else"          { count(); return TOKEN(ELSE);     }*/
+"else"          { count(); return TOKEN(ELSE);     }
  /*"false"         { count(); return TOKEN(FALSE);    }*/
  /* "float"         { count(); return TOKEN(FLOAT);    }*/
  /*"for"           { count(); return TOKEN(FOR);      }*/
