@@ -51,7 +51,7 @@ void comment(void);
 [1-9]{D}*                { count(); SAVE_TOKEN; return CONSTANT_INT; /* decimal */     }
 
 \'.\'|\'\\.\'            { count(); SAVE_TOKEN; return CONSTANT_CHAR; /* character */  }
- /*L?'(\\.|[^\\'\n])+'      { count(); SAVE_TOKEN; return CONSTANT_STRING; *//* string */   /*}*/
+\"(\\.|[^"\\])*\"      { count(); SAVE_TOKEN; return CONSTANT_STRING; *//* string */   /*}
 
 
 {D}+{E}                  { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }

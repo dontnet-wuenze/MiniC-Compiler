@@ -23,7 +23,7 @@
 }
 
 %token <string> IDENTIFIER 
-%token <string> CONSTANT_INT CONSTANT_FLOAT CONSTANT_CHAR // 1, 1.0, 'a'
+%token <string> CONSTANT_INT CONSTANT_FLOAT CONSTANT_CHAR CONSTANT_STRING// 1, 1.0, 'a' "abc"
 %token <token> PLUS MINUS MUL DIV // +, -, *, /
 %token <token> AND OR // !, &&, ||
 %token <token> EQU NEQ LESST GREATERT LEQ GEQ // ==, !=, <, >, <=, >=
@@ -135,6 +135,9 @@ const_value:
     }
     | CONSTANT_CHAR {
         $$ = new CharNode($1->at(0), yylineno);
+    }
+    | CONSTANT_STRING {
+        $$ = new StringNode(*$1, yylineno);
     };
 
 call_args:
