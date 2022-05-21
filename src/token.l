@@ -43,7 +43,7 @@ void comment(void);
 "while"         { count(); return TOKEN(WHILE);    }
 
     /* identifiers */
-{L}({L}|{D})*            { count(); SAVE_TOKEN; return IDENTIFIER; }
+{L}({L}|{D})*            { count(); SAVE_TOKEN; return IDENTIFIER;}
 
     /* constants */
 0[xX]{H}+                { count(); SAVE_TOKEN; return CONSTANT_INT; /* hexadecimal */ }
@@ -51,7 +51,7 @@ void comment(void);
 [1-9]{D}*                { count(); SAVE_TOKEN; return CONSTANT_INT; /* decimal */     }
 
 \'.\'|\'\\.\'            { count(); SAVE_TOKEN; return CONSTANT_CHAR; /* character */  }
-\"(\\.|[^"\\])*\"      { count(); SAVE_TOKEN; return CONSTANT_STRING; *//* string */   /*}
+\"(\\.|[^"\\])*\"      { count(); SAVE_TOKEN; return CONSTANT_STRING; /* string */    }
 
 
 {D}+{E}                  { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }
