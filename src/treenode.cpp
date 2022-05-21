@@ -135,7 +135,31 @@ llvm::Value* ArrayElementAssignNode::emitter(EmitContext &emitContext){
 // llvm::Value* FloatArrayElementNode::emitter(EmitContext &emitContext){}//-----------  -_-
 // llvm::Value* CharArrayElementNode::emitter(EmitContext &emitContext){}//-----------  -_-
 
+vector<llvm::Value *> *getPrintArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
+    vector<llvm::Value *> *printf_args = new vector<llvm::Value *>;
+    for(auto it: args){
+        llvm::Value* tmp = it->emitter(emitContext);
+        if (tmp->getType() == llvm::Type::getFloatTy(myContext))
+            tmp = myBuilder.CreateFPExt(tmp, llvm::Type::getDoubleTy(myContext), "tmpdouble");
+        printf_args->push_back(tmp);
+    }
+    return printf_args;
+
+}
+
+llvm:: Value* emitPrintf(EmitContext &emitContext,vector<ExpressionNode*> args){
+    vector<llvm::Value *> *printf_args = getPrintArgs(emitContext,args);    
+    return myBuilder.CreateCall(emitContext.printf, *printf_args, "printf");
+}
+
 llvm::Value* FunctionCallNode::emitter(EmitContext &emitContext){
+    if(identifier.name == "printf"){ //若调用printf函数
+        return emitPrintf(emitContext,args);
+    }
+    // else if(identifier.name == "scanf"){ //若调用scanf函数
+
+    // }
+
     //在module中查找以identifier命名的函数
     llvm::Function *func = emitContext.myModule->getFunction(identifier.name.c_str());
     if (func == NULL) {
@@ -268,8 +292,8 @@ llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
     llvm::Function *TheFunction = myBuilder.GetInsertBlock()->getParent();
     
     llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "then", TheFunction);
-    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else");
-    llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(myContext, "ifcont");
+    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else",TheFunction);
+    llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(myContext, "ifcont",TheFunction);
 
     auto branch = myBuilder.CreateCondBr(condValue, ThenBB, ElseBB);
     myBuilder.SetInsertPoint(ThenBB);
@@ -420,6 +444,23 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 	return function;
 }
 
+// vector<llvm::Value *> *getPrintArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
+//     vector<llvm::Value *> *printf_args = new vector<llvm::Value *>;
+//     for(auto it: args){
+//         llvm::Value* tmp = it->emitter(emitContext);
+//         if (tmp->getType() == llvm::Type::getFloatTy(myContext))
+//             tmp = myBuilder.CreateFPExt(tmp, llvm::Type::getDoubleTy(myContext), "tmpdouble");
+//         printf_args->push_back(tmp);
+//     }
+//     return printf_args;
+
+// }
+
+// llvm:: Value* emitPrintf(EmitContext &emitContext,vector<ExpressionNode*> args){
+//     vector<llvm::Value *> *printf_args = getPrintArgs(emitContext,args);    
+//     return myBuilder.CreateCall(emitContext.printf, *printf_args, "printf");
+// }
+
 /*
 --------------------- Generate Json ----------------------
 */
@@ -498,12 +539,42 @@ void FunctionCallNode::generateJson(string &s) {
     s.append("}");
 }
 
+string getOpStr(int op) {
+    string opStr;
+    switch (op) {
+    case PLUS : { opStr = "+"; break;}
+    case MINUS : { opStr = "-"; break;}
+    case MUL : { opStr = "*"; break;}
+    case DIV : { opStr = "/"; break;}
+    case OR : { opStr = "||"; break;}
+    case AND : { opStr = "&&"; break;}
+    case EQU : { opStr = "=="; break;}
+    case NEQ : { opStr = "!="; break;}
+    case LESST : { opStr = "<"; break;}
+    case GREATERT : { opStr = ">"; break;}
+    case LEQ : { opStr = "<="; break;}
+    case GEQ : { opStr = ">="; break;}
+    default: {
+        cout << "ERROR" << op << endl;
+    }
+    }
+    return opStr;
+}
+
 void BinaryOpNode::generateJson(string &s) {
     s.append("\n{\n");
     s.append("\"name\" : \"BinaryOperation\",\n");
     s.append("\"children\" : \n[");
     
     this->lhs.generateJson(s);
+    s.append(",");
+    
+    string opStr = getOpStr(this->op);
+
+    s.append("\n{\n");
+    s.append("\"name\" : \"" + opStr + "\"\n");
+    s.append("}");
+
     s.append(",");
     this->rhs.generateJson(s);
 
@@ -614,6 +685,7 @@ void FunctionDeclarationNode::generateJson(string &s) {
     s.append("\"children\" : \n[");
     
     this->type.generateJson(s);
+    s.append(",");
     this->identifier.generateJson(s);
     
     s.append(",");

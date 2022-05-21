@@ -12,7 +12,7 @@ var root = {
     "children": []
 };
 
-d3.json("sample.json", function(error, data) {
+d3.json("AST.json", function(error, data) {
     root = data;
 });
 
@@ -28,7 +28,7 @@ var diagonal = d3.svg.diagonal()
 });
 
 var svg = d3.select("#body").append("svg").attr("width", 10000).attr("height", 10000)
-    .call(zm = d3.behavior.zoom().scaleExtent([1,20]).on("zoom", redraw)).append("g")
+    .call(zm = d3.behavior.zoom().scaleExtent([0.1,20]).on("zoom", redraw)).append("g")
     .attr("transform", "translate(" + 350 + "," + 20 + ")");
 
 //necessary so that zoom knows where to zoom and unzoom from
