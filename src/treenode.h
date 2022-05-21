@@ -21,6 +21,7 @@ public:
   virtual llvm::Value *emitter(EmitContext &emitContext) {
     return nullptr;
   }
+  virtual void generateJson(string &s) {}
 public:
   int lineNo;
 };
@@ -41,6 +42,7 @@ class IntNode : public ExpressionNode {
 public:
   IntNode(int value, int lineNo) : ExpressionNode(lineNo), value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   int value;
 };
@@ -49,6 +51,7 @@ class FloatNode : public ExpressionNode {
 public:
   FloatNode(float value, int lineNo) : ExpressionNode(lineNo), value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   float value;
 };
@@ -57,6 +60,7 @@ class CharNode : public ExpressionNode {
 public:
   CharNode(char value, int lineNo) : ExpressionNode(lineNo), value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   char value;
 };
@@ -65,6 +69,7 @@ class IdentifierNode : public ExpressionNode {
 public:
   IdentifierNode(string &name, int lineNo) : ExpressionNode(lineNo), name(name) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   string name;
 };
@@ -73,6 +78,7 @@ class ArrayElementNode : public ExpressionNode {   //identifier[expression] 表�
 public:
   ArrayElementNode(IdentifierNode& identifier, ExpressionNode &index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   IdentifierNode& identifier;
   ExpressionNode  &index;
@@ -82,6 +88,7 @@ class ArrayElementAssignNode : public ExpressionNode {   //identifier[expression
 public:
   ArrayElementAssignNode(IdentifierNode &identifier, ExpressionNode &index, ExpressionNode &rhs, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index), rhs(rhs) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   IdentifierNode& identifier;
   ExpressionNode &index;
@@ -123,6 +130,7 @@ public:
   FunctionCallNode(IdentifierNode &identifier, vector<ExpressionNode*> &args, int lineNo) : ExpressionNode(lineNo), identifier(identifier), args(args) {}
   FunctionCallNode(IdentifierNode &identifier, int lineNo) : ExpressionNode(lineNo), identifier(identifier) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   IdentifierNode& identifier;
   vector<ExpressionNode*> args;
@@ -132,6 +140,7 @@ class BinaryOpNode : public ExpressionNode {  //增加关系型二元运算
 public:
   BinaryOpNode(int op, ExpressionNode &lhs, ExpressionNode &rhs, int lineNo) : ExpressionNode(lineNo), op(op), lhs(lhs), rhs(rhs) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   int op;
   ExpressionNode& lhs;
@@ -142,6 +151,7 @@ class AssignmentNode : public ExpressionNode {
 public:
   AssignmentNode(IdentifierNode &lhs, ExpressionNode &rhs, int lineNo) : ExpressionNode(lineNo), lhs(lhs), rhs(rhs) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   IdentifierNode& lhs;
   ExpressionNode& rhs;
@@ -152,6 +162,7 @@ public:
   BlockNode(int lineNo) : ExpressionNode(lineNo) {}
   BlockNode(vector<StatementNode*> statementList, int lineNo) : ExpressionNode(lineNo),  statementList(statementList) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   vector<StatementNode*> statementList;
 };
@@ -161,12 +172,14 @@ public:
 	ExpressionNode &expression;
 	ExpressionStatementNode(ExpressionNode& expression, int lineNo) : StatementNode(lineNo),  expression(expression) {}
 	virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 };
 
 class BreakStatementNode : public StatementNode {
 public:
 	BreakStatementNode(int lineNo) : StatementNode(lineNo) {}
 	virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 };
 
 class IfElseStatementNode : public StatementNode {
@@ -174,6 +187,7 @@ public:
   IfElseStatementNode(ExpressionNode &expression, BlockNode &ifBlock, BlockNode &elseBlock, int lineNo)
     : StatementNode(lineNo), expression(expression), ifBlock(ifBlock), elseBlock(elseBlock) {}
   virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   ExpressionNode &expression;
   BlockNode &ifBlock;
@@ -185,6 +199,7 @@ public:
   WhileStatementNode(ExpressionNode &expression, BlockNode &block, int lineNo)
     : StatementNode(lineNo), expression(expression), block(block) {}
   virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   ExpressionNode &expression;
   BlockNode &block;
@@ -194,6 +209,7 @@ class ReturnStatementNode : public StatementNode {
 public:
   ReturnStatementNode(ExpressionNode &expression, int lineNo) : StatementNode(lineNo), expression(expression) {}
   virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   ExpressionNode &expression;
 };
@@ -212,6 +228,7 @@ public:
         }
 
   virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   int size; // size != 0 means this is an array
   IdentifierNode &type;
@@ -235,6 +252,7 @@ public:
   FunctionDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, 
     vector<VariableDeclarationNode*> args, BlockNode& block, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), args(args), block(block) {}
   virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
 public:
   IdentifierNode &type;
   IdentifierNode &identifier;
