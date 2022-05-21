@@ -88,12 +88,14 @@ llvm::Value* CharNode::emitter(EmitContext &emitContext){  //----------  -_-
 
 llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
     cout << "IdentifierNode : " << name << endl;
-    if(emitContext.getTop().find(name) == emitContext.getTop().end()){
+
+    llvm::Value* variable = emitContext.findVariable(name);
+    if(variable == nullptr){
         std::cerr << "undeclared variable " << name << endl;
-        return NULL;
+        return nullptr;
     }
-    llvm::Type* tp = emitContext.getTopType()[name];
-    return new llvm::LoadInst(tp,emitContext.getTop()[name], "LoadInst", false, myBuilder.GetInsertBlock());
+    llvm::Type* tp = variable->getType()->getPointerElementType();
+    return new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
 }
 
 llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){  //返回了指向id[index]的指针，待定；
@@ -245,22 +247,20 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
     }
 }
 
+// identifier = expression
 llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
     cout << "AssignmentNode,lhs: " << lhs.name << endl;
-    llvm::Value* result = emitContext.myModule->getGlobalVariable(lhs.name, true);//在全局中查找变量
-    llvm::Value* right = rhs.emitter(emitContext);
+    
+    // 在符号表和全局变量中查找
+    llvm::Value* result = emitContext.findVariable(lhs.name);
     if(result == nullptr){
-        if(emitContext.getTop().find(lhs.name) == emitContext.getTop().end()){ //局部中也未找到对应identifier
-            cerr << "undeclared variable " << lhs.name << endl;
-		return NULL;
-        }
-        else{   
-            result = emitContext.getTop()[lhs.name];
-            //emitContext.getTop()[lhs.name] = right;
-        }
+        cerr << "undeclared variable " << lhs.name << endl;
+		return nullptr;
     }
+
+    llvm::Value* right = rhs.emitter(emitContext);
+    // 定位 block
     auto CurrentBlock = myBuilder.GetInsertBlock();
-    //return new llvm::StoreInst(rhs.emitter(emitContext), emitContext.getTop()[lhs.name], false, CurrentBlock);
     
     return new llvm::StoreInst(right, result, false, CurrentBlock);
 }
@@ -330,9 +330,14 @@ llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
     condBB = myBuilder.GetInsertBlock();
 
     myBuilder.SetInsertPoint(loopBB);
+
+    // 将 while 的域放入栈顶
+    emitContext.pushBlock();
     block.emitter(emitContext);
     myBuilder.CreateBr(condBB);
 
+    // while 结束, 将 while 的域弹出栈顶
+    emitContext.popBlock();
     myBuilder.SetInsertPoint(afterBB);
 
     GlobalAfterBB.pop();
@@ -363,12 +368,13 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){
             return nullptr;
         } else {
             cout << "Creating local variable declaration " << type.name << " " << identifier.name<< endl;
-            emitContext.getTopType()[identifier.name] = llvmType;
             //auto *block = myBuilder.GetInsertBlock();
             auto *block = myBuilder.GetInsertBlock();
             llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
             //llvm::Value* alloc = CreateEntryBlockAlloca(emitContext.currentFunc, identifier.name, llvmType);
-            // llvm::Value* alloc = CreateEntryBlockAlloca(context->get);
+
+            // 将新定义的变量类型和地址存入符号表中
+            emitContext.getTopType()[identifier.name] = llvmType;
             emitContext.getTop()[identifier.name] = alloc;
             if (assignmentExpression != NULL) {
                 AssignmentNode assn(identifier, *assignmentExpression,lineNo);
@@ -421,9 +427,9 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 
     emitContext.currentFunc = function;
 
-	emitContext.pushBlock(bblock);
+	emitContext.pushBlock();
     myBuilder.SetInsertPoint(bblock);
-
+ 
 	llvm::Function::arg_iterator argsValues = function->arg_begin();
     llvm::Value* argumentValue;
 

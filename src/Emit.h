@@ -30,10 +30,8 @@ using namespace std;
 extern llvm::LLVMContext myContext; //定义全局context
 extern llvm::IRBuilder<> myBuilder; //定义全局IRbuilder
 
-class basic_block{ 
+class symbolTable{ 
 public:
-    llvm::BasicBlock *block;
-    llvm::Value* return_value;
     map<string, llvm::Value*> local_var; //局部变量map
     map<string, llvm::Type*> local_var_type;//局部变量string-llvm::type的map
 };
@@ -41,7 +39,7 @@ public:
 
 class EmitContext{
 public:
-    stack<basic_block *> block_stack; //llvm::block栈
+    vector<symbolTable *> symbolTable_stack; //符号栈
     stack<llvm::Function*> funStack; //函数栈
 
 
@@ -53,36 +51,14 @@ public:
     EmitContext();
     //~EmitContext();
 
-    map<string, llvm::Value*>& getTop() {  //得到basic_block栈顶部的basic_block的局部变量map
-        return block_stack.top()-> local_var; 
-        }
-    map<string, llvm::Type*>& getTopType(){
-        return block_stack.top()->local_var_type;
-    }
-    
-    llvm::BasicBlock *getCurrentBlock(){
-        return block_stack.top()->block;
-    }
+    map<string, llvm::Value*>& getTop();
+    map<string, llvm::Type*>& getTopType();
 
-    void pushBlock(llvm::BasicBlock *block){
-        block_stack.push(new basic_block());
-        block_stack.top()->return_value = NULL;
-        block_stack.top()->block = block;
-    }
+    void pushBlock();
+    void popBlock();
 
-    void popBlock(){
-        basic_block *tmp = block_stack.top();
-        block_stack.pop();
-        delete tmp;
-    }
-
-    llvm::Value* getReturnValue(){
-        return block_stack.top()->return_value;
-    }
-
-    void setReturnValue(llvm::Value* value){
-        block_stack.top()->return_value = value;
-    }
+    llvm::Value* findVariable(string variableName);
+    llvm::Type* findVariableType(string variableName);
 
     llvm::Function* getCurFunction();
     void pushFunction(llvm::Function* func);
