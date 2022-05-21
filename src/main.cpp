@@ -1,3 +1,4 @@
+#include "fstream"
 #include "Emit.h"
 #include "treenode.h"
 #include <llvm/Support/TargetSelect.h>
@@ -15,6 +16,15 @@ int main(){
     llvm::InitializeNativeTargetAsmPrinter();
 
     cout<<"program begin"<<endl;
+
+    // jsonize AST
+    string jsonString("");
+    programBlock->generateJson(jsonString);
+    ofstream fout;
+    fout.open("../visualization/AST.json");
+    fout << jsonString;
+    fout.close();
+
     generator->Run(programBlock);
 
     return 0;

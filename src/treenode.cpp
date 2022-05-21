@@ -461,3 +461,211 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 //     return myBuilder.CreateCall(emitContext.printf, *printf_args, "printf");
 // }
 
+/*
+--------------------- Generate Json ----------------------
+*/
+
+
+void IntNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"IntValue: " + to_string(this->value) + "\"\n");
+    s.append("}");
+}
+
+void FloatNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"FloatValue: " + to_string(this->value) + "\"\n");
+    s.append("}");
+}
+
+void CharNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"CharValue: " + to_string(this->value) + "\"\n");
+    s.append("}");
+}
+
+void IdentifierNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"Identifier: " + this->name + "\"\n");
+    s.append("}");
+}
+
+void ArrayElementNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"ArrayElement\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->identifier.generateJson(s);
+    s.append(",");
+    this->index.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void ArrayElementAssignNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"ArrayElementAssign\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->identifier.generateJson(s);
+    s.append(",");
+    this->index.generateJson(s);
+    s.append(",");
+    this->rhs.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void FunctionCallNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"FunctionCall\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->identifier.generateJson(s);
+    
+    if (!this->args.empty())
+        s.append(",");
+
+    for (TreeNode* node : this->args) {
+        node->generateJson(s);
+        if (node != this->args.back()) {
+            s.append(",");
+        }
+    }
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void BinaryOpNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"BinaryOperation\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->lhs.generateJson(s);
+    s.append(",");
+    this->rhs.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void AssignmentNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"Assignment\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->lhs.generateJson(s);
+    s.append(",");
+    this->rhs.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void BlockNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"Block\",\n");
+    s.append("\"children\" : \n[");
+    for (TreeNode* node : this->statementList) {
+        node->generateJson(s);
+        if (node != this->statementList.back()) {
+            s.append(",");
+        }
+    }
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void ExpressionStatementNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"ExpressionStatement\",\n");
+    s.append("\"children\" : \n[");
+    this->expression.generateJson(s);
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void BreakStatementNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : break\n");
+    s.append("}");
+}
+
+void IfElseStatementNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"IfElseStatement\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->expression.generateJson(s);
+    s.append(",");
+    this->ifBlock.generateJson(s);
+    s.append(",");
+    this->elseBlock.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void WhileStatementNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"WhileStatement\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->expression.generateJson(s);
+    s.append(",");
+    this->block.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void ReturnStatementNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"ReturnStatement\",\n");
+    s.append("\"children\" : \n[");
+    this->expression.generateJson(s);
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void VariableDeclarationNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"VariableDeclaration\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->type.generateJson(s);
+    s.append(",");
+    this->identifier.generateJson(s);
+
+    if (this->assignmentExpression != nullptr) {
+        s.append(",");
+        this->assignmentExpression->generateJson(s);
+    }
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void FunctionDeclarationNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"FunctionDeclaration\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->type.generateJson(s);
+    this->identifier.generateJson(s);
+    
+    s.append(",");
+
+    for (TreeNode* node : this->args) {
+        node->generateJson(s);
+        s.append(",");
+    }
+
+    this->block.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}

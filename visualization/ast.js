@@ -8,7 +8,7 @@ width = 2960 - margin.right - margin.left,
 height = 2800 - margin.top - margin.bottom;
 
 var root = {
-    "name": "flare",
+    "name": "AST",
     "children": []
 };
 
@@ -18,10 +18,10 @@ d3.json("sample.json", function(error, data) {
 
 var i = 0,
     duration = 750,
-    rectW = 60,
+    rectW = 160,
     rectH = 30;
 
-var tree = d3.layout.tree().nodeSize([80, 40]);
+var tree = d3.layout.tree().nodeSize([200, 40]);
 var diagonal = d3.svg.diagonal()
     .projection(function (d) {
     return [d.x + rectW / 2, d.y + rectH / 2];
