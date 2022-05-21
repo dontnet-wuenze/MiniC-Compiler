@@ -176,7 +176,357 @@ D3... @dontnet-wuenze
 
 ## 语义分析
 
-TODO: 
+#### LLVM简介：
+
+LLVM是构架编译器(compiler)的框架系统，以C++编写而成，用于优化以任意程序语言编写的程序的编译时间(compile-time)、链接时间(link-time)、运行时间(run-time)以及空闲时间(idle-time)，对开发者保持开放，并兼容已有脚本。
+
+对关注编译技术的开发人员，LLVM提供了很多优点：
+
+**现代化的设计**
+
+LLVM的设计是高度模块化的，使得其代码更为清晰和便于排查问题所在。
+
+**语言无关的中间代码**
+
+一方面，这使得透过LLVM能够将不同的语言相互连结起来；也使得LLVM能够紧密地与IDE交互和集成。
+
+另一方面，发布中间代码而非目标代码能够在目标系统上更好地发挥其潜能而又不伤害可调试性（i.e. 在目标系统上针对本机的硬件环境产生目标代码，但又能够直接通过中间代码来进行行级调试）
+
+**作为工具和函数库**
+
+使用LLVM提供的工具可以比较容易地实现新的编程语言的优化编译器或VM，或为现有的编程语言引入一些更好的优化/调试特性
+
+
+
+#### 完成目标：
+
+要提供整个程序的主入口，对语法分析后得到的抽象语法树进行语义分析，得到每个节点对应的LLVM::Value的值，并生成中间代码，即LLVMIR代码，以便为后面的运行做铺垫；
+
+
+
+#### treenode.cpp分析
+
+此文件主要实现每个Node节点中对应的**emitter(emitContext &emitContext)**方法，为每种不同种类的节点实现生成LLVMIR中间代码；
+
+先定义全局的上下文myContext及llvm::IRbuilder；
+
+```c++
+extern llvm::LLVMContext myContext; //定义全局context
+extern llvm::IRBuilder<> myBuilder; //定义全局IRbuilder
+```
+
+
+
+basic_block类主要存储一个llvm:：BasicBlock，返回值return_value以及块内的变量表local_var及对应的变量-llvm类型表local_var_type；
+
+```c++
+class basic_block{ 
+public:
+    llvm::BasicBlock *block;
+    llvm::Value* return_value;
+    map<string, llvm::Value*> local_var; //局部变量map
+    map<string, llvm::Type*> local_var_type;//局部变量string-llvm::type的map
+};
+```
+
+
+
+EmitContext类主要存储了一个basic_block栈，同时存有LLVM::module以及所定义的输入输出函数；
+
+```c++
+class EmitContext{
+public:
+    stack<basic_block *> block_stack; //llvm::block栈
+public:
+    llvm::Module *myModule; 
+    llvm::Function *printf,*scanf;
+    ……
+```
+
+
+
+表示整形、浮点型、字符常量的节点emitter函数：传入全局上下文myContext，分别返回了其对应的LLVM::constant种类；
+
+```c++
+llvm::Value* IntNode::emitter(EmitContext &emitContext){
+    cout << "IntNode : " << value <<endl;
+    return llvm::ConstantInt::get(llvm::Type::getInt32Ty(myContext),value,true);
+}
+
+llvm::Value* FloatNode::emitter(EmitContext &emitContext){
+    cout << "FloatNode : " << value <<endl;
+    return llvm::ConstantFP::get(llvm::Type::getFloatTy(myContext),value);
+}
+
+llvm::Value* CharNode::emitter(EmitContext &emitContext){  //----------  -_-
+    cout << "CharNode : " << value <<endl;
+    return myBuilder.getInt8(this->value);
+}
+```
+
+
+
+IdentifierNode节点emitter函数分析：首先在block栈中搜索，若没有搜索到，则表明此标识符并未被声明，会报错；接着调用loadinst函数，产生一条load指令，加载此标识符的值；
+
+```c++
+llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
+    cout << "IdentifierNode : " << name << endl;
+    if(emitContext.getTop().find(name) == emitContext.getTop().end()){
+        std::cerr << "undeclared variable " << name << endl;
+        return NULL;
+    }
+    llvm::Type* tp = emitContext.getTopType()[name];
+    return new llvm::LoadInst(tp,emitContext.getTop()[name], "LoadInst", false, myBuilder.GetInsertBlock());
+}
+```
+
+
+
+对于为数组成员的identifierNode节点emitter函数分析：首先找到其数组名对应的llvm::value，再得到其下标index值，再调用IRbuilder里的createInBoundsGEP函数，得到数组中对应元素的值；
+
+```C++
+llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){ 
+    llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
+    llvm::Value* indexValue = index.emitter(emitContext);
+    vector<llvm::Value*> indexList;
+    indexList.push_back(myBuilder.getInt32(0));
+    indexList.push_back(indexValue);
+    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
+    return elePtr;
+}
+
+```
+
+
+
+调用函数时，首先判断是否为printf函数，若是则直接进入emitPrintf函数，否则查找有无该函数名的函数，若无则报错，否则先对调用中传入的每个参数调用emitter函数，再调用callinst函数实现一条call指令完成函数的调用；
+
+```c++
+llvm::Value* FunctionCallNode::emitter(EmitContext &emitContext){
+    if(identifier.name == "printf"){ //若调用printf函数
+        return emitPrintf(emitContext,args);
+    }
+    //在module中查找以identifier命名的函数
+    llvm::Function *func = emitContext.myModule->getFunction(identifier.name.c_str());
+    if (func == NULL) {
+		std::cerr << "no such function " << identifier.name << endl;
+	}
+
+    vector<llvm::Value*> tmp;
+    vector<ExpressionNode*>::iterator i;
+    for(auto i : args){  //对每个ExpressionNode进行emit 并将结果存入tmp中
+        tmp.push_back((*i).emitter(emitContext));
+    }
+    //调用
+    llvm::CallInst *call = llvm::CallInst::Create(func,llvm::makeArrayRef(tmp),"",myBuilder.GetInsertBlock());
+    cout << "Creating method call: " << identifier.name << endl;
+	return call;
+
+}
+```
+
+
+
+对二元运算节点emitter函数分析：分别先对运算符左右两边进行emitter，之后判断操作符的种类，分别返回其对应的llvm::instruction类中对应的二元运算符，再返回Create函数；支持的运算符分别有“+”、“-”、“*”、“/”、“and”、“or”、“LT”等；
+
+```c++
+llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
+    cout << "BinaryOpNode : " << op << endl;
+    llvm::Value* left = lhs.emitter(emitContext);
+    llvm::Value* right = rhs.emitter(emitContext);
+    llvm::Instruction::BinaryOps bi_op;
+
+    if(op == PLUS || op == MINUS || op == MUL || op == DIV){
+        if(op == PLUS){bi_op = llvm::Instruction::Add;}
+        else if(op == MINUS){bi_op = llvm::Instruction::Sub;}
+        else if(op == MUL){bi_op = llvm::Instruction::Mul;}
+        else if(op == DIV){bi_op = llvm::Instruction::SDiv;}
+        return llvm::BinaryOperator::Create(bi_op,left,right,"", myBuilder.GetInsertBlock());
+    }
+    else if(op == AND){
+        ……
+```
+
+
+
+赋值语句节点分析：首先在局部与全局变量中依次查找标识符，若均无则表示未定义，报错；否则利用IRbuilder定位到当前所在block，调用stroeinst函数创造一条store指令；
+
+```c++
+llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
+    cout << "AssignmentNode,lhs: " << lhs.name << endl;
+    llvm::Value* result = emitContext.myModule->getGlobalVariable(lhs.name, true);//在全局中查找变量
+    llvm::Value* right = rhs.emitter(emitContext);
+    if(result == nullptr){
+        if(emitContext.getTop().find(lhs.name) == emitContext.getTop().end()){ //局部中也未找到对应identifier
+            cerr << "undeclared variable " << lhs.name << endl;
+		return NULL;
+        }
+        else{   
+            result = emitContext.getTop()[lhs.name];
+            //emitContext.getTop()[lhs.name] = right;
+        }
+    }
+    auto CurrentBlock = myBuilder.GetInsertBlock();
+    //return new llvm::StoreInst(rhs.emitter(emitContext), emitContext.getTop()[lhs.name], false, CurrentBlock);
+    
+    return new llvm::StoreInst(right, result, false, CurrentBlock);
+}
+```
+
+
+
+if-else语句节点分析：会分别为condition条件、then、以及else部分生成block，再调用SetInsertPoint函数在其对应位置插入语句，调用creatBr函数创建分支跳转，实现若condition条件符合则进入then-block，否则进入else-block；
+
+```c++
+llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
+    cout << "Generating code for if-else"<<endl;
+    llvm::Value *condValue = expression.emitter(emitContext), *thenValue = nullptr, *elseValue = nullptr;
+    condValue = myBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(myContext), 0, true), "ifCond");
+    
+    llvm::Function *TheFunction = myBuilder.GetInsertBlock()->getParent();
+    
+    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "then", TheFunction);
+    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else",TheFunction);
+    llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(myContext, "ifcont",TheFunction);
+
+    auto branch = myBuilder.CreateCondBr(condValue, ThenBB, ElseBB);
+    myBuilder.SetInsertPoint(ThenBB);
+    thenValue = ifBlock.emitter(emitContext);
+    myBuilder.CreateBr(MergeBB);
+    ThenBB = myBuilder.GetInsertBlock();
+
+    myBuilder.SetInsertPoint(ElseBB);
+    elseValue = elseBlock.emitter(emitContext);
+    myBuilder.CreateBr(MergeBB);
+    ElseBB = myBuilder.GetInsertBlock();
+
+    myBuilder.SetInsertPoint(MergeBB);    
+    return branch;
+}
+```
+
+
+
+while节点与if-else节点原理基本一致，均为调用setinsertpoint函数在对应位置插入语句，且判断条件后进入对应的block；
+
+```c++
+llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
+    cout << "Generating code for while "<<endl;
+
+    llvm::Function *TheFunction = emitContext.currentFunc;
+
+    llvm::BasicBlock *condBB = llvm::BasicBlock::Create(myContext, "cond", TheFunction);
+    llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(myContext, "loop", TheFunction);
+    llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(myContext, "afterLoop", TheFunction);
+
+    GlobalAfterBB.push(afterBB);
+
+    myBuilder.CreateBr(condBB);
+    myBuilder.SetInsertPoint(condBB);
+
+    llvm::Value *condValue = expression.emitter(emitContext);
+    condValue = myBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(myContext), 0, true), "whileCond");
+    auto branch = myBuilder.CreateCondBr(condValue, loopBB, afterBB);
+    condBB = myBuilder.GetInsertBlock();
+
+    myBuilder.SetInsertPoint(loopBB);
+    block.emitter(emitContext);
+    myBuilder.CreateBr(condBB);
+
+    myBuilder.SetInsertPoint(afterBB);
+
+    GlobalAfterBB.pop();
+    return branch;
+}
+```
+
+
+
+对于变量定义节点，要先判断是普通变量还是数组的定义，确定类型后分别判断其是全局变量还是局部变量，然后对应分别新建Globalvariable和allocinst指令，创建新的变量；此处还会判断是否在定义时为其赋了初值，若是的话也会同时再调用assignmentNode为其赋值；
+
+```c++
+llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){  
+    if(size == 0){ //普通变量
+        llvm::Type* llvmType = getLLvmType(type.name);
+        
+        // 若当前函数为空, 说明是全局变量
+        if(emitContext.currentFunc == nullptr) {
+            cout << "Creating global variable declaration " << type.name << " " << identifier.name<< endl;
+            llvm::Value *tmp = emitContext.myModule->getGlobalVariable(identifier.name, true);
+            if(tmp != nullptr){
+                throw logic_error("Redefined Global Variable: " + identifier.name);
+            }
+            llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(*(emitContext.myModule), llvmType, false, llvm::GlobalValue::PrivateLinkage, 0, identifier.name);
+            globalVar->setInitializer(llvm::ConstantInt::get(llvmType, 0));
+            return nullptr;
+        } else {
+            cout << "Creating local variable declaration " << type.name << " " << identifier.name<< endl;
+            emitContext.getTopType()[identifier.name] = llvmType;
+            auto *block = myBuilder.GetInsertBlock();
+            llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
+            emitContext.getTop()[identifier.name] = alloc;
+            if (assignmentExpression != NULL) {
+                AssignmentNode assn(identifier, *assignmentExpression,lineNo);
+                assn.emitter(emitContext);
+            }
+            return alloc;
+        }
+    }
+    else{ //数组
+        llvm::Type* llvmType = getArrayLLvmType(type.name, size); 
+        if(emitContext.currentFunc == nullptr) { //当前函数为空，为全局数组定义
+            ……
+            
+        }
+        else{
+            cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;
+            ……
+
+        }
+    }
+}
+```
+
+
+
+函数定义节点分析：调用FunctionType得到函数类型，再调用llvm::Function创造函数；之后创建一个基本块并压入栈，这样可以区分函数内与外界作用域；之后对函数后的block进行emit，最后函数结束后从栈中pop出来；
+
+```c++
+llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
+    vector<llvm::Type*> argTypes;
+    for(auto it : args){
+        argTypes.push_back(getLLvmType((*it).type.name));
+    }
+	llvm::FunctionType *ftype = llvm::FunctionType::get(getLLvmType(type.name), makeArrayRef(argTypes), false);
+	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, identifier.name.c_str(), emitContext.myModule);
+	llvm::BasicBlock *bblock = llvm::BasicBlock::Create(myContext, "entry", function, 0);
+
+    emitContext.currentFunc = function;
+
+	emitContext.pushBlock(bblock);
+    myBuilder.SetInsertPoint(bblock);
+
+	llvm::Function::arg_iterator argsValues = function->arg_begin();
+    llvm::Value* argumentValue;
+
+    for(auto it : args){
+        (*it).emitter(emitContext);
+        argumentValue = &*argsValues++;
+        argumentValue->setName((it)->identifier.name.c_str());
+        llvm::StoreInst *inst = new llvm::StoreInst(argumentValue, emitContext.getTop()[(it)->identifier.name], false, bblock);
+	}
+	
+	block.emitter(emitContext);
+	emitContext.popBlock();
+    emitContext.currentFunc = nullptr;
+	std::cout << "Creating function: " << identifier.name << endl;
+	return function;
+}
+```
+
+
+
+
 
 ## 生成可执行文件
 
@@ -184,7 +534,4 @@ TODO:
 
 ## 测试
 
-
-
 ## 总结
-
