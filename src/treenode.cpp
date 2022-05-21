@@ -112,15 +112,10 @@ llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){  //返回了�
 llvm::Value* ArrayElementAssignNode::emitter(EmitContext &emitContext){
     cout<<"assign for arrayElementNode:"<<identifier.name<<"[]"<<endl;
 
-    llvm::Value* arrayValue = emitContext.myModule->getGlobalVariable(identifier.name, true);//在全局中查找数组名
+    llvm::Value* arrayValue = emitContext.findVariable(identifier.name);
     if(arrayValue == nullptr){
-        if(emitContext.getTop().find(identifier.name) == emitContext.getTop().end()){ //局部中也未找到对应identifier
-            cerr << "undeclared array " << identifier.name << endl;
-		return NULL;
-        }
-        else{
-            arrayValue = emitContext.getTop()[identifier.name];
-        }
+        cerr << "undeclared array " << identifier.name << endl;
+		return nullptr;
     }
     // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
     llvm::Value* indexValue = index.emitter(emitContext);
