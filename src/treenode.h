@@ -29,6 +29,9 @@ public:
 class ExpressionNode : public TreeNode {
 public:
   ExpressionNode(int lineNo) : TreeNode(lineNo) {}
+  virtual llvm::Value *getAddr(EmitContext &emitContext) {
+    return nullptr;
+  }
   //virtual llvm::Value *emitter(EmitContext &emitContext);
 };
 
@@ -69,6 +72,7 @@ class StringNode : public ExpressionNode {
 public:
   StringNode(string &value, int lineNo) : ExpressionNode(lineNo), value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  llvm::Value *getAddr(EmitContext &emitContext);
   void generateJson(string &s);
 public:
   string &value;
@@ -78,6 +82,7 @@ class IdentifierNode : public ExpressionNode {
 public:
   IdentifierNode(string &name, int lineNo) : ExpressionNode(lineNo), name(name) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  llvm::Value *getAddr(EmitContext &emitContext);
   void generateJson(string &s);
 public:
   string name;
@@ -87,6 +92,7 @@ class ArrayElementNode : public ExpressionNode {   //identifier[expression] è¡¨ç
 public:
   ArrayElementNode(IdentifierNode& identifier, ExpressionNode &index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
   llvm::Value *emitter(EmitContext &emitContext);
+  llvm::Value *getAddr(EmitContext &emitContext);
   void generateJson(string &s);
 public:
   IdentifierNode& identifier;
