@@ -98,7 +98,7 @@ llvm::Value* StringNode::emitter(EmitContext &emitContext) {
     indexList.push_back(myBuilder.getInt32(0));
     indexList.push_back(myBuilder.getInt32(0));
     // var value
-    llvm::Value * varPtr = myBuilder.CreateInBoundsGEP(globalVar, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
+    llvm::Value * varPtr = myBuilder.CreateInBoundsGEP(globalVar, llvm::ArrayRef<llvm::Value*>(indexList), "tmpstring");
     return varPtr;
 }
 
@@ -114,14 +114,14 @@ llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
     return new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
 }
 
-llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){  //返回了指向id[index]的指针，待定；
+llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){
     llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
     indexList.push_back(myBuilder.getInt32(0));
     indexList.push_back(indexValue);
-    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
-    return elePtr;
+    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
+    return myBuilder.CreateLoad(elePtr->getType()->getPointerElementType(), elePtr, "tmpvar");
     //return myBuilder.CreateAlignedLoad(elePtr, 4);
 }
 
