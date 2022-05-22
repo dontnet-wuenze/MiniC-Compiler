@@ -1,13 +1,23 @@
 # 编译原理实验报告
 
-
 ## 摘要 
+
+我们的MiniC编译器实际上是由三到四个组件构成的，其中数据以 pipeline 的方式从一个组件传送到下一个组件。我们将使用不同的工具来帮助构建这些组件。这是每个步骤我们所使用的工具：
+
 ![pipeline](report.assets/pipeline.png)
+
+为了进行我们的词法分析，我们使用了开源工具 Lex，目前主要以[Flex](http://flex.sourceforge.net/)的形式提供。Lex 通常与语义解析密切相关，我们将在 Yacc ([Bison](https://www.gnu.org/software/bison/)) 的帮助下执行语义解析。语义解析完成后，我们通过 AST 生成我们的字节码并且可视化我们的 AST。在此，我们使用了[LLVM](https://llvm.org/)，它可以生成中间字节码，然后我们会使用 LLVM 的 `lli` 编译在我们的机器上执行此字节码。
+
+总的来说，我们：
+
+1. **使用*Flex*进行词法分析**：将输入数据拆分为一组标记（标识符、关键字、数字、括号、加减号等）
+2. **使用*Bison*进行语义解析**：在解析tokens时生成 AST。Bison 将在这里完成大部分工作，我们只需要定义我们的 AST。 
+3. **使用*LLVM*组装**：遍历 AST 并为每个节点生成字节码。
 
 
 ## 目录
 
-TODO: 写完之后自动生成
+[TOC]
 
 ## 运行环境
 
@@ -62,7 +72,77 @@ user's code
 
 我们选择根据我们设计的语言，对 [ANSI C grammar, Lex specification](http://www.lysator.liu.se/c/ANSI-C-grammar-l.html) 进行精简，得到我们的 token.l 文件。
 
-TODO: 可以把最后精简后的代码贴到这里
+```c
+D            [0-9]
+L            [a-zA-Z_]
+H            [a-fA-F0-9]
+E            ([Ee][+-]?{D}+)
+
+    /* match two types of comments */
+"/*"            { comment();               }
+"//"[^\n]*      { /* consume //-comment */ }
+
+    /* match all the necessary keywords */
+"break"         { count(); return TOKEN(BREAK);    }
+"else"          { count(); return TOKEN(ELSE);     }
+"if"            { count(); return TOKEN(IF);       }
+"return"        { count(); return TOKEN(RETURN);   }
+"while"         { count(); return TOKEN(WHILE);    }
+
+    /* identifiers */
+{L}({L}|{D})*            { count(); SAVE_TOKEN; return IDENTIFIER;}
+
+    /* constants */
+0[xX]{H}+                { count(); SAVE_TOKEN; return CONSTANT_INT; /* hexadecimal */ }
+0[0-7]*                  { count(); SAVE_TOKEN; return CONSTANT_INT; /* octal */       }
+[1-9]{D}*                { count(); SAVE_TOKEN; return CONSTANT_INT; /* decimal */     }
+
+\'.\'|\'\\.\'            { count(); SAVE_TOKEN; return CONSTANT_CHAR; /* character */  }
+\"(\\.|[^"\\])*\"      { count(); SAVE_TOKEN; return CONSTANT_STRING; /* string */    }
+
+
+{D}+{E}                  { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }
+{D}*"."{D}+{E}?          { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }
+{D}+"."{D}*{E}?          { count(); SAVE_TOKEN; return CONSTANT_FLOAT; }
+
+
+    /* operators */
+"&&"            { count(); return TOKEN(AND); }
+"||"            { count(); return TOKEN(OR); }
+"<="            { count(); return TOKEN(LEQ); }
+">="            { count(); return TOKEN(GEQ); }
+"=="            { count(); return TOKEN(EQU); }
+"!="            { count(); return TOKEN(NEQ); }
+";"             { count(); return TOKEN(';'); }
+"{"             { count(); return TOKEN('{'); }
+"}"             { count(); return TOKEN('}'); }
+","             { count(); return TOKEN(','); }
+":"             { count(); return TOKEN(':'); }
+"="             { count(); return TOKEN('='); }
+"("             { count(); return TOKEN('('); }
+")"             { count(); return TOKEN(')'); }
+"["             { count(); return TOKEN('['); }
+"]"             { count(); return TOKEN(']'); }
+"."             { count(); return TOKEN('.'); }
+"&"             { count(); return TOKEN('&'); }
+"!"             { count(); return TOKEN('!'); }
+"~"             { count(); return TOKEN('~'); }
+"-"             { count(); return TOKEN(MINUS); }
+"+"             { count(); return TOKEN(PLUS); }
+"*"             { count(); return TOKEN(MUL); }
+"/"             { count(); return TOKEN(DIV); }
+"%"             { count(); return TOKEN('%'); }
+"<"             { count(); return TOKEN(LESST); }
+">"             { count(); return TOKEN(GREATERT); }
+"^"             { count(); return TOKEN('^'); }
+"|"             { count(); return TOKEN('|'); }
+"?"             { count(); return TOKEN('?'); }
+
+[ \t\v\n\f]     { count(); }
+.               { printf("unknown token : %s in line: %d\n", yytext, yylineno); }
+```
+
+
 
 ## 语法分析 -- Yacc (Bison)
 
@@ -570,8 +650,14 @@ clang-10 easy.o -o easy
 
 ## 测试
 
+### 快速排序：
+
 ![quicksort](report.assets/quicksort.png)
+
+### 矩阵乘法：
 
 ![multi](report.assets/multi.png)
 
 ## 总结
+
+TODO
