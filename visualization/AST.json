@@ -34,62 +34,17 @@
 "children" : 
 [
 {
-"name" : "ArrayElementAssign",
+"name" : "FunctionCall",
 "children" : 
 [
+{
+"name" : "Identifier: scanf"
+},
+{
+"name" : "StringValue: "%d""
+},
 {
 "name" : "Identifier: a"
-},
-{
-"name" : "IntValue: 0"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: a"
-},
-{
-"name" : "IntValue: 4"
-},
-{
-"name" : "IntValue: 5"
-}
-]
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: t"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: a"
-},
-{
-"name" : "IntValue: 4"
 }
 ]
 }
@@ -107,34 +62,82 @@
 "name" : "Identifier: printf"
 },
 {
-"name" : "StringValue: "%d %d %d\n""
+"name" : "StringValue: "%d\n""
+},
+{
+"name" : "Identifier: a"
+}
+]
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: c"
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "FunctionCall",
+"children" : 
+[
+{
+"name" : "Identifier: scanf"
+},
+{
+"name" : "StringValue: "%d""
 },
 {
 "name" : "ArrayElement",
 "children" : 
 [
 {
-"name" : "Identifier: a"
+"name" : "Identifier: c"
 },
 {
-"name" : "IntValue: 0"
+"name" : "IntValue: 5"
 }
 ]
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "FunctionCall",
+"children" : 
+[
+{
+"name" : "Identifier: printf"
+},
+{
+"name" : "StringValue: "%d\n""
 },
 {
 "name" : "ArrayElement",
 "children" : 
 [
 {
-"name" : "Identifier: a"
+"name" : "Identifier: c"
 },
 {
-"name" : "IntValue: 4"
+"name" : "IntValue: 5"
 }
 ]
-},
-{
-"name" : "Identifier: t"
 }
 ]
 }
@@ -145,7 +148,7 @@
 "children" : 
 [
 {
-"name" : "IntValue: 0"
+"name" : "Identifier: a"
 }
 ]
 }

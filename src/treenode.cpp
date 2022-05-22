@@ -86,11 +86,37 @@ llvm::Value* CharNode::emitter(EmitContext &emitContext){  //----------  -_-
     return myBuilder.getInt8(this->value);
 }
 
+// StringNode 返回值是首地址
 llvm::Value* StringNode::emitter(EmitContext &emitContext) {
     cout << "StringNode : " << value <<endl;
     string str = value.substr(1, value.length() - 2);
     string after = string(1, '\n');
-    str = str.replace(str.find("\\n"), 2, after);
+    int pos = str.find("\\n");
+    while(pos != string::npos) {
+        str = str.replace(pos, 2, after);
+        pos = str.find("\\n");
+    }
+    llvm::Constant *strConst = llvm::ConstantDataArray::getString(myContext, str);
+    
+    llvm::Value *globalVar = new llvm::GlobalVariable(*(emitContext.myModule), strConst->getType(), true, llvm::GlobalValue::PrivateLinkage, strConst, "_Const_String_");
+    vector<llvm::Value*> indexList;
+    indexList.push_back(myBuilder.getInt32(0));
+    indexList.push_back(myBuilder.getInt32(0));
+    // var value
+    llvm::Value * varPtr = myBuilder.CreateInBoundsGEP(globalVar, llvm::ArrayRef<llvm::Value*>(indexList), "tmpstring");
+    return varPtr;
+}
+
+// StringNode 返回值是首地址
+llvm::Value* StringNode::getAddr(EmitContext &emitContext) {
+    cout << "StringNode : " << value <<endl;
+    string str = value.substr(1, value.length() - 2);
+    string after = string(1, '\n');
+    int pos = str.find("\\n");
+    while(pos != string::npos) {
+        str = str.replace(pos, 2, after);
+        pos = str.find("\\n");
+    }
     llvm::Constant *strConst = llvm::ConstantDataArray::getString(myContext, str);
     
     llvm::Value *globalVar = new llvm::GlobalVariable(*(emitContext.myModule), strConst->getType(), true, llvm::GlobalValue::PrivateLinkage, strConst, "_Const_String_");
@@ -114,14 +140,52 @@ llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
     return new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
 }
 
+llvm::Value* IdentifierNode::getAddr(EmitContext &emitContext){
+    cout << "IdentifierNode : " << name << endl;
+
+    llvm::Value* variable = emitContext.findVariable(name);
+    if(variable == nullptr){
+        std::cerr << "undeclared variable " << name << endl;
+        return nullptr;
+    }
+    return variable;
+}
+
+// 数组在表达式中返回的是值
 llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){
-    llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
+    cout << "ArrayElementNode : " << identifier.name << "[]" << endl;
+
+    llvm::Value* arrayValue = emitContext.findVariable(identifier.name);
+    if(arrayValue == nullptr){
+        cerr << "undeclared array " << identifier.name << endl;
+		return nullptr;
+    }
+
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
     indexList.push_back(myBuilder.getInt32(0));
     indexList.push_back(indexValue);
     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
     return myBuilder.CreateLoad(elePtr->getType()->getPointerElementType(), elePtr, "tmpvar");
+    //return myBuilder.CreateAlignedLoad(elePtr, 4);
+}
+
+// 返回数组 array[index]的地址用来函数传参
+llvm::Value* ArrayElementNode::getAddr(EmitContext &emitContext){
+    cout << "getArrayElementNodeAddr : " << identifier.name << "[]" << endl;
+
+    llvm::Value* arrayValue = emitContext.findVariable(identifier.name);
+    if(arrayValue == nullptr){
+        cerr << "undeclared array " << identifier.name << endl;
+		return nullptr;
+    }
+
+    llvm::Value* indexValue = index.emitter(emitContext);
+    vector<llvm::Value*> indexList;
+    indexList.push_back(myBuilder.getInt32(0));
+    indexList.push_back(indexValue);
+    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
+    return elePtr;
     //return myBuilder.CreateAlignedLoad(elePtr, 4);
 }
 
@@ -148,7 +212,7 @@ llvm::Value* ArrayElementAssignNode::emitter(EmitContext &emitContext){
 // llvm::Value* FloatArrayElementNode::emitter(EmitContext &emitContext){}//-----------  -_-
 // llvm::Value* CharArrayElementNode::emitter(EmitContext &emitContext){}//-----------  -_-
 
-vector<llvm::Value *> *getPrintArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
+vector<llvm::Value *> *getPrintfArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
     vector<llvm::Value *> *printf_args = new vector<llvm::Value *>;
     for(auto it: args){
         llvm::Value* tmp = it->emitter(emitContext);
@@ -160,18 +224,32 @@ vector<llvm::Value *> *getPrintArgs(EmitContext &emitContext,vector<ExpressionNo
 
 }
 
+vector<llvm::Value *> *getScanfArgsAddr(EmitContext &emitContext,vector<ExpressionNode*>args){
+    vector<llvm::Value *> *scanf_args = new vector<llvm::Value *>;
+    for(auto it: args){
+        llvm::Value* tmp = it->getAddr(emitContext);
+        scanf_args->push_back(tmp);
+    }
+    return scanf_args;
+
+}
+
 llvm:: Value* emitPrintf(EmitContext &emitContext,vector<ExpressionNode*> args){
-    vector<llvm::Value *> *printf_args = getPrintArgs(emitContext,args);    
+    vector<llvm::Value *> *printf_args = getPrintfArgs(emitContext, args);    
     return myBuilder.CreateCall(emitContext.printf, *printf_args, "printf");
+}
+
+llvm:: Value* emitScanf(EmitContext &emitContext,vector<ExpressionNode*> args){
+    vector<llvm::Value *> *scanf_args = getScanfArgsAddr(emitContext, args);    
+    return myBuilder.CreateCall(emitContext.scanf, *scanf_args, "scanf");
 }
 
 llvm::Value* FunctionCallNode::emitter(EmitContext &emitContext){
     if(identifier.name == "printf"){ //若调用printf函数
-        return emitPrintf(emitContext,args);
+        return emitPrintf(emitContext, args);
+    } else if(identifier.name == "scanf"){ //若调用scanf函数
+        return emitScanf(emitContext, args);
     }
-    // else if(identifier.name == "scanf"){ //若调用scanf函数
-
-    // }
 
     //在module中查找以identifier命名的函数
     llvm::Function *func = emitContext.myModule->getFunction(identifier.name.c_str());
