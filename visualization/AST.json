@@ -25,10 +25,118 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: i"
+"name" : "Identifier: a"
+}
+]
 },
 {
-"name" : "IntValue: 2"
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "ArrayElementAssign",
+"children" : 
+[
+{
+"name" : "Identifier: a"
+},
+{
+"name" : "IntValue: 0"
+},
+{
+"name" : "IntValue: 1"
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "ArrayElementAssign",
+"children" : 
+[
+{
+"name" : "Identifier: a"
+},
+{
+"name" : "IntValue: 4"
+},
+{
+"name" : "IntValue: 5"
+}
+]
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: t"
+},
+{
+"name" : "ArrayElement",
+"children" : 
+[
+{
+"name" : "Identifier: a"
+},
+{
+"name" : "IntValue: 4"
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "FunctionCall",
+"children" : 
+[
+{
+"name" : "Identifier: printf"
+},
+{
+"name" : "StringValue: "%d %d %d\n""
+},
+{
+"name" : "ArrayElement",
+"children" : 
+[
+{
+"name" : "Identifier: a"
+},
+{
+"name" : "IntValue: 0"
+}
+]
+},
+{
+"name" : "ArrayElement",
+"children" : 
+[
+{
+"name" : "Identifier: a"
+},
+{
+"name" : "IntValue: 4"
+}
+]
+},
+{
+"name" : "Identifier: t"
+}
+]
 }
 ]
 },
