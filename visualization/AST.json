@@ -677,7 +677,7 @@
 "name" : "Identifier: scanf"
 },
 {
-"name" : "StringValue: "%d""
+"name" : "StringValue: \"%d\""
 },
 {
 "name" : "Identifier: N"
@@ -736,7 +736,7 @@
 "name" : "Identifier: scanf"
 },
 {
-"name" : "StringValue: "%d""
+"name" : "StringValue: \"%d\""
 },
 {
 "name" : "ArrayElement",
@@ -904,7 +904,7 @@
 "name" : "Identifier: printf"
 },
 {
-"name" : "StringValue: "%d ""
+"name" : "StringValue: \"%d \""
 },
 {
 "name" : "ArrayElement",
