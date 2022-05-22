@@ -170,8 +170,17 @@ void IfElseStatementNode::generateJson(string &s) {
 
 D3... @dontnet-wuenze 
 
-这里在放两张可视化的图，注意把图片放到report.assets文件夹下
+quicksort 中一个while 语句对应的语法树
 
+![while](report.assets/while.png)
+
+![visualwhile](report.assets/visualwhile.png)
+
+if 语句的一部分(太大了放不下)
+
+![if](report.assets/if.png)
+
+![visualif](report.assets/ifvisual.png)
 
 
 ## 语义分析
@@ -530,8 +539,39 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 
 ## 生成可执行文件
 
-听 yrq 说是`lli`一下输出的.ll 文件就可以了
+首先运行我们的程序，生成 LLVM IR 中间代码，存入 .ll文件中，ll文件内容如下所示
+```
+; ModuleID = 'main'
+source_filename = "main"
+
+declare i32 @printf(i8*, ...)
+
+declare i32 @scanf(...)
+
+define i32 @main() {
+entry:
+  %i = alloca i32
+  store i32 0, i32* %i
+  %LoadInst = load i32, i32* %i
+  ret i32 %LoadInst
+}
+```
+
+之后执行以下几步生成可执行文件
+
+
+```
+llvm-as-10 easy.ll
+llc-10 easy.bc
+clang-10 -c easy.s 
+clang-10 easy.o -o easy
+./easy
+```
 
 ## 测试
+
+![quicksort](report.assets/quicksort.png)
+
+![multi](report.assets/multi.png)
 
 ## 总结

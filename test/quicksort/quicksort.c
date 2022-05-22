@@ -56,5 +56,6 @@ int main()
         printf("%d ", A[i]);
         i = i + 1;
     }
+    
     return 0;
 }
