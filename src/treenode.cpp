@@ -35,7 +35,7 @@ llvm::Type* getArrayLLvmType(string type,int size){ //对于数组形式，返�
     else if(type == "char"){
         return llvm::ArrayType::get(llvm::Type::getInt8Ty(myContext), size);
     }
-    else{return NULL;}
+    else{return nullptr;}
 }
 
 llvm::Instruction::CastOps getCastInst(llvm::Type* src, llvm::Type* dst) {
@@ -98,7 +98,7 @@ llvm::Value* StringNode::emitter(EmitContext &emitContext) {
     indexList.push_back(myBuilder.getInt32(0));
     indexList.push_back(myBuilder.getInt32(0));
     // var value
-    llvm::Value * varPtr = myBuilder.CreateInBoundsGEP(globalVar, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
+    llvm::Value * varPtr = myBuilder.CreateInBoundsGEP(globalVar, llvm::ArrayRef<llvm::Value*>(indexList), "tmpstring");
     return varPtr;
 }
 
@@ -114,14 +114,14 @@ llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
     return new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
 }
 
-llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){  //返回了指向id[index]的指针，待定；
+llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){
     llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
     indexList.push_back(myBuilder.getInt32(0));
     indexList.push_back(indexValue);
-    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
-    return elePtr;
+    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
+    return myBuilder.CreateLoad(elePtr->getType()->getPointerElementType(), elePtr, "tmpvar");
     //return myBuilder.CreateAlignedLoad(elePtr, 4);
 }
 
@@ -297,27 +297,35 @@ llvm::Value* BreakStatementNode::emitter(EmitContext &emitContext){
 
 llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
     cout << "Generating code for if-else"<<endl;
+
+    
+    llvm::Function *TheFunction = emitContext.currentFunc;
+    
+    llvm::BasicBlock *IfBB = llvm::BasicBlock::Create(myContext, "if", TheFunction);
+    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else",TheFunction);
+    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "afterifelse",TheFunction);
+
+    // 跳转判断语句
     llvm::Value *condValue = expression.emitter(emitContext), *thenValue = nullptr, *elseValue = nullptr;
     condValue = myBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(myContext), 0, true), "ifCond");
-    
-    llvm::Function *TheFunction = myBuilder.GetInsertBlock()->getParent();
-    
-    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "then", TheFunction);
-    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else",TheFunction);
-    llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(myContext, "ifcont",TheFunction);
+    auto branch = myBuilder.CreateCondBr(condValue, IfBB, ElseBB);
 
-    auto branch = myBuilder.CreateCondBr(condValue, ThenBB, ElseBB);
-    myBuilder.SetInsertPoint(ThenBB);
-    thenValue = ifBlock.emitter(emitContext);
-    myBuilder.CreateBr(MergeBB);
-    ThenBB = myBuilder.GetInsertBlock();
+    myBuilder.SetInsertPoint(IfBB);
+    // 将 if 的域放入栈顶
+    emitContext.pushBlock();
+    ifBlock.emitter(emitContext);
+    emitContext.popBlock();
+    // 跳过 else
+    myBuilder.CreateBr(ThenBB);
 
     myBuilder.SetInsertPoint(ElseBB);
-    elseValue = elseBlock.emitter(emitContext);
-    myBuilder.CreateBr(MergeBB);
-    ElseBB = myBuilder.GetInsertBlock();
+    // 将 else 的域放入栈顶
+    emitContext.pushBlock();
+    elseBlock.emitter(emitContext);
+    emitContext.popBlock();
+    myBuilder.CreateBr(ThenBB);
 
-    myBuilder.SetInsertPoint(MergeBB);    
+    myBuilder.SetInsertPoint(ThenBB);    
     return branch;
 }
 
@@ -363,7 +371,7 @@ llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
     return myBuilder.CreateRet(rv);
 }
 
-llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){  
+llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {  
     if(size == 0){ //普通变量
         llvm::Type* llvmType = getLLvmType(type.name);
         
