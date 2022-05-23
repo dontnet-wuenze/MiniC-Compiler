@@ -165,8 +165,8 @@ cond:                                             ; preds = %loop, %entry
 
 loop:                                             ; preds = %cond
   %LoadInst2 = load i32, i32* %i
-  %tmparray = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst2
-  %scanf3 = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_.1, i32 0, i32 0), i32* %tmparray)
+  %elePtr = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst2
+  %scanf3 = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_.1, i32 0, i32 0), i32* %elePtr)
   %LoadInst4 = load i32, i32* %i
   %0 = add i32 %LoadInst4, 1
   store i32 %0, i32* %i
@@ -194,11 +194,11 @@ cond8:                                            ; preds = %loop9, %afterLoop
 
 loop9:                                            ; preds = %cond8
   %LoadInst15 = load i32, i32* %i
-  %tmparray16 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst15
-  %tmpvar = load i32, i32* %tmparray16
+  %tmparray = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst15
+  %tmpvar = load i32, i32* %tmparray
   %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @_Const_String_.2, i32 0, i32 0), i32 %tmpvar)
-  %LoadInst17 = load i32, i32* %i
-  %2 = add i32 %LoadInst17, 1
+  %LoadInst16 = load i32, i32* %i
+  %2 = add i32 %LoadInst16, 1
   store i32 %2, i32* %i
   br label %cond8
 
