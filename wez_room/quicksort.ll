@@ -10,7 +10,7 @@ declare i32 @printf(i8*, ...)
 
 declare i32 @scanf(...)
 
-define i32 @quicksort(i32 %left1, i32 %right2) {
+define void @quicksort(i32 %left1, i32 %right2) {
 entry:
   %left = alloca i32
   store i32 %left1, i32* %left
@@ -122,7 +122,7 @@ afterifelse:                                      ; preds = %else, %if
 if44:                                             ; preds = %afterLoop
   %LoadInst51 = load i32, i32* %left
   %LoadInst52 = load i32, i32* %j
-  %6 = call i32 @quicksort(i32 %LoadInst51, i32 %LoadInst52)
+  call void @quicksort(i32 %LoadInst51, i32 %LoadInst52)
   br label %afterifelse46
 
 else45:                                           ; preds = %afterLoop
@@ -138,14 +138,14 @@ afterifelse46:                                    ; preds = %else45, %if44
 if53:                                             ; preds = %afterifelse46
   %LoadInst60 = load i32, i32* %i
   %LoadInst61 = load i32, i32* %right
-  %7 = call i32 @quicksort(i32 %LoadInst60, i32 %LoadInst61)
+  call void @quicksort(i32 %LoadInst60, i32 %LoadInst61)
   br label %afterifelse55
 
 else54:                                           ; preds = %afterifelse46
   br label %afterifelse55
 
 afterifelse55:                                    ; preds = %else54, %if53
-  ret i32 0
+  ret void
 }
 
 define i32 @main() {
@@ -181,7 +181,7 @@ afterLoop:                                        ; preds = %cond
   store i32 %1, i32* %right
   %LoadInst6 = load i32, i32* %left
   %LoadInst7 = load i32, i32* %right
-  %2 = call i32 @quicksort(i32 %LoadInst6, i32 %LoadInst7)
+  call void @quicksort(i32 %LoadInst6, i32 %LoadInst7)
   store i32 0, i32* %i
   br label %cond8
 
@@ -198,8 +198,8 @@ loop9:                                            ; preds = %cond8
   %tmpvar = load i32, i32* %tmparray16
   %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @_Const_String_.2, i32 0, i32 0), i32 %tmpvar)
   %LoadInst17 = load i32, i32* %i
-  %3 = add i32 %LoadInst17, 1
-  store i32 %3, i32* %i
+  %2 = add i32 %LoadInst17, 1
+  store i32 %2, i32* %i
   br label %cond8
 
 afterLoop10:                                      ; preds = %cond8
