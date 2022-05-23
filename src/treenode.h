@@ -229,6 +229,14 @@ public:
   ExpressionNode &expression;
 };
 
+class ReturnVoidNode : public StatementNode {
+public:
+  ReturnVoidNode(int lineNo) : StatementNode(lineNo) {}
+  virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
+public:
+};
+
 class VariableDeclarationNode : public StatementNode {  //增加数组的声明
 public:
   VariableDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier), size(0), assignmentExpression(nullptr) {}

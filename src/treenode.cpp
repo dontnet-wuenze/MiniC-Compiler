@@ -442,11 +442,19 @@ llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
 }
 
 llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
+
     cout << "Generating return code for " << typeid(expression).name() << endl;
 	llvm::Value *rv = expression.emitter(emitContext);
 	//emitContext.setReturnValue(rv);
 	//return rv;
     return myBuilder.CreateRet(rv);
+}
+
+llvm::Value* ReturnVoidNode::emitter(EmitContext &emitContext){
+    
+    cout << "Generating return code for void " << endl;
+
+    return myBuilder.CreateRetVoid();
 }
 
 llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {  
@@ -589,7 +597,7 @@ void CharNode::generateJson(string &s) {
 
 void StringNode::generateJson(string &s) {
     s.append("\n{\n");
-    s.append("\"name\" : \"StringValue: " + this->value + "\"\n");
+    s.append("\"name\" : \"StringValue: " + this->value.substr(1, this->value.length() - 2) + "\"\n");
     s.append("}");
 }
 
@@ -766,6 +774,14 @@ void ReturnStatementNode::generateJson(string &s) {
     s.append("\"name\" : \"ReturnStatement\",\n");
     s.append("\"children\" : \n[");
     this->expression.generateJson(s);
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void ReturnVoidNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"ReturnVoid\",\n");
+    s.append("\"children\" : \n[");
     s.append("\n]\n");
     s.append("}");
 }

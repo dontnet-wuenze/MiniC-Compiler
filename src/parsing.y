@@ -71,6 +71,9 @@ statement:
     | expression ';' {
         $$ = new ExpressionStatementNode(*$1, yylineno);
     }
+    | RETURN ';' {
+        $$ = new ReturnVoidNode(yylineno);
+    }
     | RETURN expression ';' {
         $$ = new ReturnStatementNode(*$2, yylineno);
     }
