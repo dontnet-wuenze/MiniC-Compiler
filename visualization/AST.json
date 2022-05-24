@@ -8,10 +8,10 @@
 "children" : 
 [
 {
-"name" : "Identifier: int"
+"name" : "Identifier: float"
 },
 {
-"name" : "Identifier: main"
+"name" : "Identifier: f"
 },
 {
 "name" : "Block",
@@ -60,7 +60,7 @@
 "children" : 
 [
 {
-"name" : "IntValue: 0"
+"name" : "FloatValue: 2.200000"
 }
 ]
 }
@@ -73,7 +73,7 @@
 "children" : 
 [
 {
-"name" : "IntValue: 0"
+"name" : "IntValue: 3"
 }
 ]
 }

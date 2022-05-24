@@ -1,6 +1,7 @@
 #include "treenode.h"
 #include "parsing.hpp"
 #include "Emit.h"
+#include <llvm-10/llvm/IR/BasicBlock.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Function.h>
@@ -510,16 +511,17 @@ llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
 
     cout << "Generating return code for " << typeid(expression).name() << endl;
 	llvm::Value *rv = expression.emitter(emitContext);
-	//emitContext.setReturnValue(rv);
-	//return rv;
-    return myBuilder.CreateRet(rv);
+    myBuilder.CreateStore(rv, emitContext.returnVal);
+
+    return myBuilder.CreateBr(emitContext.returnBB);
 }
 
 llvm::Value* ReturnVoidNode::emitter(EmitContext &emitContext){
     
     cout << "Generating return code for void " << endl;
 
-    return myBuilder.CreateRetVoid();
+    return myBuilder.CreateBr(emitContext.returnBB);
+    //return myBuilder.CreateRetVoid();
 }
 
 llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {  
@@ -599,10 +601,17 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, identifier.name.c_str(), emitContext.myModule);
 	llvm::BasicBlock *bblock = llvm::BasicBlock::Create(myContext, "entry", function, 0);
 
-    emitContext.currentFunc = function;
-
-	emitContext.pushBlock();
     myBuilder.SetInsertPoint(bblock);
+    emitContext.currentFunc = function;
+    emitContext.returnBB = llvm::BasicBlock::Create(myContext, "return", function, 0);
+
+    // 定义一个变量用来存储函数的返回值
+    if(type.name.compare("void") != 0) {
+        emitContext.returnVal = new llvm::AllocaInst(getLLvmType(type.name), bblock->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(), "", bblock);
+    }
+ 
+	emitContext.pushBlock();
+
  
 	llvm::Function::arg_iterator argsValues = function->arg_begin();
     llvm::Value* argumentValue;
@@ -617,6 +626,14 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 	block.emitter(emitContext);
     //auto returnBlock = myBuilder.GetInsertBlock();
 	//llvm::ReturnInst::Create(myContext, emitContext.getReturnValue(), returnBlock);
+
+    myBuilder.SetInsertPoint(emitContext.returnBB);
+    if(type.name.compare("void") == 0) {
+        myBuilder.CreateRetVoid();
+    } else {
+        llvm::Value* ret = myBuilder.CreateLoad(getLLvmType(type.name), emitContext.returnVal, "");
+        myBuilder.CreateRet(ret);
+    }
 
 	emitContext.popBlock();
     emitContext.currentFunc = nullptr;
