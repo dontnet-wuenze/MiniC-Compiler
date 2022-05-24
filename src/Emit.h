@@ -49,6 +49,7 @@ public:
     llvm::Function* currentFunc;
     llvm::BasicBlock* returnBB;
     llvm::Value* returnVal;
+    bool hasReturn;
 
     EmitContext();
     //~EmitContext();

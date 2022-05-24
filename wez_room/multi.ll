@@ -18,6 +18,7 @@ declare i32 @scanf(...)
 
 define i32 @main() {
 entry:
+  %0 = alloca i32
   %A_M = alloca i32
   %A_N = alloca i32
   %B_M = alloca i32
@@ -28,6 +29,10 @@ entry:
   %j = alloca i32
   store i32 0, i32* %j
   br label %cond
+
+return:                                           ; preds = %afterLoop87, %if
+  %1 = load i32, i32* %0
+  ret i32 %1
 
 cond:                                             ; preds = %afterLoop4, %entry
   %LoadInst = load i32, i32* %i
@@ -56,20 +61,20 @@ cond2:                                            ; preds = %loop3, %loop
 loop3:                                            ; preds = %cond2
   %LoadInst9 = load i32, i32* %i
   %LoadInst10 = load i32, i32* %A_N
-  %0 = mul i32 %LoadInst9, %LoadInst10
+  %2 = mul i32 %LoadInst9, %LoadInst10
   %LoadInst11 = load i32, i32* %j
-  %1 = add i32 %0, %LoadInst11
-  %elePtr = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %1
+  %3 = add i32 %2, %LoadInst11
+  %elePtr = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %3
   %scanf12 = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_.1, i32 0, i32 0), i32* %elePtr)
   %LoadInst13 = load i32, i32* %j
-  %2 = add i32 %LoadInst13, 1
-  store i32 %2, i32* %j
+  %4 = add i32 %LoadInst13, 1
+  store i32 %4, i32* %j
   br label %cond2
 
 afterLoop4:                                       ; preds = %cond2
   %LoadInst14 = load i32, i32* %i
-  %3 = add i32 %LoadInst14, 1
-  store i32 %3, i32* %i
+  %5 = add i32 %LoadInst14, 1
+  store i32 %5, i32* %i
   br label %cond
 
 cond16:                                           ; preds = %afterLoop25, %afterLoop
@@ -88,7 +93,7 @@ afterLoop18:                                      ; preds = %cond16
   %LoadInst38 = load i32, i32* %B_M
   %icmptmp39 = icmp ne i32 %LoadInst37, %LoadInst38
   %ifCond = icmp ne i1 %icmptmp39, false
-  br i1 %ifCond, label %if, label %else
+  br i1 %ifCond, label %if, label %afterifonly
 
 cond23:                                           ; preds = %loop24, %loop17
   %LoadInst26 = load i32, i32* %j
@@ -100,35 +105,33 @@ cond23:                                           ; preds = %loop24, %loop17
 loop24:                                           ; preds = %cond23
   %LoadInst30 = load i32, i32* %i
   %LoadInst31 = load i32, i32* %B_N
-  %4 = mul i32 %LoadInst30, %LoadInst31
+  %6 = mul i32 %LoadInst30, %LoadInst31
   %LoadInst32 = load i32, i32* %j
-  %5 = add i32 %4, %LoadInst32
-  %elePtr33 = getelementptr inbounds [200000 x i32], [200000 x i32]* @B, i32 0, i32 %5
+  %7 = add i32 %6, %LoadInst32
+  %elePtr33 = getelementptr inbounds [200000 x i32], [200000 x i32]* @B, i32 0, i32 %7
   %scanf34 = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_.3, i32 0, i32 0), i32* %elePtr33)
   %LoadInst35 = load i32, i32* %j
-  %6 = add i32 %LoadInst35, 1
-  store i32 %6, i32* %j
+  %8 = add i32 %LoadInst35, 1
+  store i32 %8, i32* %j
   br label %cond23
 
 afterLoop25:                                      ; preds = %cond23
   %LoadInst36 = load i32, i32* %i
-  %7 = add i32 %LoadInst36, 1
-  store i32 %7, i32* %i
+  %9 = add i32 %LoadInst36, 1
+  store i32 %9, i32* %i
   br label %cond16
 
 if:                                               ; preds = %afterLoop18
   %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([25 x i8], [25 x i8]* @_Const_String_.4, i32 0, i32 0))
-  br label %afterifelse
+  store i32 0, i32* %0
+  br label %return
 
-else:                                             ; preds = %afterLoop18
-  br label %afterifelse
-
-afterifelse:                                      ; preds = %else, %if
+afterifonly:                                      ; preds = %afterLoop18
   store i32 0, i32* %i
   store i32 0, i32* %j
   br label %cond40
 
-cond40:                                           ; preds = %afterLoop49, %afterifelse
+cond40:                                           ; preds = %afterLoop49, %afterifonly
   %LoadInst43 = load i32, i32* %i
   %LoadInst44 = load i32, i32* %A_M
   %icmptmp45 = icmp slt i32 %LoadInst43, %LoadInst44
@@ -153,10 +156,10 @@ cond47:                                           ; preds = %afterLoop59, %loop4
 loop48:                                           ; preds = %cond47
   %LoadInst54 = load i32, i32* %i
   %LoadInst55 = load i32, i32* %B_N
-  %8 = mul i32 %LoadInst54, %LoadInst55
+  %10 = mul i32 %LoadInst54, %LoadInst55
   %LoadInst56 = load i32, i32* %j
-  %9 = add i32 %8, %LoadInst56
-  %tmpvar = getelementptr inbounds [200000 x i32], [200000 x i32]* @C, i32 0, i32 %9
+  %11 = add i32 %10, %LoadInst56
+  %tmpvar = getelementptr inbounds [200000 x i32], [200000 x i32]* @C, i32 0, i32 %11
   store i32 0, i32* %tmpvar
   %k = alloca i32
   store i32 0, i32* %k
@@ -164,8 +167,8 @@ loop48:                                           ; preds = %cond47
 
 afterLoop49:                                      ; preds = %cond47
   %LoadInst84 = load i32, i32* %i
-  %10 = add i32 %LoadInst84, 1
-  store i32 %10, i32* %i
+  %12 = add i32 %LoadInst84, 1
+  store i32 %12, i32* %i
   br label %cond40
 
 cond57:                                           ; preds = %loop58, %loop48
@@ -178,43 +181,43 @@ cond57:                                           ; preds = %loop58, %loop48
 loop58:                                           ; preds = %cond57
   %LoadInst64 = load i32, i32* %i
   %LoadInst65 = load i32, i32* %B_N
-  %11 = mul i32 %LoadInst64, %LoadInst65
+  %13 = mul i32 %LoadInst64, %LoadInst65
   %LoadInst66 = load i32, i32* %j
-  %12 = add i32 %11, %LoadInst66
-  %tmpvar67 = getelementptr inbounds [200000 x i32], [200000 x i32]* @C, i32 0, i32 %12
+  %14 = add i32 %13, %LoadInst66
+  %tmpvar67 = getelementptr inbounds [200000 x i32], [200000 x i32]* @C, i32 0, i32 %14
   %LoadInst68 = load i32, i32* %i
   %LoadInst69 = load i32, i32* %B_N
-  %13 = mul i32 %LoadInst68, %LoadInst69
+  %15 = mul i32 %LoadInst68, %LoadInst69
   %LoadInst70 = load i32, i32* %j
-  %14 = add i32 %13, %LoadInst70
-  %tmparray = getelementptr inbounds [200000 x i32], [200000 x i32]* @C, i32 0, i32 %14
+  %16 = add i32 %15, %LoadInst70
+  %tmparray = getelementptr inbounds [200000 x i32], [200000 x i32]* @C, i32 0, i32 %16
   %tmpvar71 = load i32, i32* %tmparray
   %LoadInst72 = load i32, i32* %i
   %LoadInst73 = load i32, i32* %A_N
-  %15 = mul i32 %LoadInst72, %LoadInst73
+  %17 = mul i32 %LoadInst72, %LoadInst73
   %LoadInst74 = load i32, i32* %k
-  %16 = add i32 %15, %LoadInst74
-  %tmparray75 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %16
+  %18 = add i32 %17, %LoadInst74
+  %tmparray75 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %18
   %tmpvar76 = load i32, i32* %tmparray75
   %LoadInst77 = load i32, i32* %k
   %LoadInst78 = load i32, i32* %B_N
-  %17 = mul i32 %LoadInst77, %LoadInst78
+  %19 = mul i32 %LoadInst77, %LoadInst78
   %LoadInst79 = load i32, i32* %j
-  %18 = add i32 %17, %LoadInst79
-  %tmparray80 = getelementptr inbounds [200000 x i32], [200000 x i32]* @B, i32 0, i32 %18
+  %20 = add i32 %19, %LoadInst79
+  %tmparray80 = getelementptr inbounds [200000 x i32], [200000 x i32]* @B, i32 0, i32 %20
   %tmpvar81 = load i32, i32* %tmparray80
-  %19 = mul i32 %tmpvar76, %tmpvar81
-  %20 = add i32 %tmpvar71, %19
-  store i32 %20, i32* %tmpvar67
+  %21 = mul i32 %tmpvar76, %tmpvar81
+  %22 = add i32 %tmpvar71, %21
+  store i32 %22, i32* %tmpvar67
   %LoadInst82 = load i32, i32* %k
-  %21 = add i32 %LoadInst82, 1
-  store i32 %21, i32* %k
+  %23 = add i32 %LoadInst82, 1
+  store i32 %23, i32* %k
   br label %cond57
 
 afterLoop59:                                      ; preds = %cond57
   %LoadInst83 = load i32, i32* %j
-  %22 = add i32 %LoadInst83, 1
-  store i32 %22, i32* %j
+  %24 = add i32 %LoadInst83, 1
+  store i32 %24, i32* %j
   br label %cond47
 
 cond85:                                           ; preds = %afterLoop94, %afterLoop42
@@ -229,7 +232,8 @@ loop86:                                           ; preds = %cond85
   br label %cond92
 
 afterLoop87:                                      ; preds = %cond85
-  ret i32 0
+  store i32 0, i32* %0
+  br label %return
 
 cond92:                                           ; preds = %loop93, %loop86
   %LoadInst95 = load i32, i32* %j
@@ -241,21 +245,21 @@ cond92:                                           ; preds = %loop93, %loop86
 loop93:                                           ; preds = %cond92
   %LoadInst99 = load i32, i32* %i
   %LoadInst100 = load i32, i32* %B_N
-  %23 = mul i32 %LoadInst99, %LoadInst100
+  %25 = mul i32 %LoadInst99, %LoadInst100
   %LoadInst101 = load i32, i32* %j
-  %24 = add i32 %23, %LoadInst101
-  %tmparray102 = getelementptr inbounds [200000 x i32], [200000 x i32]* @C, i32 0, i32 %24
+  %26 = add i32 %25, %LoadInst101
+  %tmparray102 = getelementptr inbounds [200000 x i32], [200000 x i32]* @C, i32 0, i32 %26
   %tmpvar103 = load i32, i32* %tmparray102
   %printf104 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @_Const_String_.5, i32 0, i32 0), i32 %tmpvar103)
   %LoadInst105 = load i32, i32* %j
-  %25 = add i32 %LoadInst105, 1
-  store i32 %25, i32* %j
+  %27 = add i32 %LoadInst105, 1
+  store i32 %27, i32* %j
   br label %cond92
 
 afterLoop94:                                      ; preds = %cond92
   %printf106 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @_Const_String_.6, i32 0, i32 0))
   %LoadInst107 = load i32, i32* %i
-  %26 = add i32 %LoadInst107, 1
-  store i32 %26, i32* %i
+  %28 = add i32 %LoadInst107, 1
+  store i32 %28, i32* %i
   br label %cond85
 }

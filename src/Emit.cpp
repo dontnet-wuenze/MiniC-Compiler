@@ -91,5 +91,6 @@ EmitContext::EmitContext(){
     this->myModule = new llvm::Module("main",myContext);
     this->printf = getPrintf();
     this->scanf = getScanf();
+    this->hasReturn = false;
 }
 

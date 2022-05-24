@@ -35,6 +35,7 @@ int main() {
 
     if(A_N != B_M) {
         printf("Incompatible Dimensions\n");
+        return 0;
     }
 
     i = 0;

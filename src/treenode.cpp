@@ -224,6 +224,10 @@ llvm::Value* ArrayElementAssignNode::emitter(EmitContext &emitContext){
     indexList.push_back(indexValue);
     llvm::Value* left =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
     llvm::Value *right = rhs.emitter(emitContext);
+
+    if (right->getType() != left->getType()->getPointerElementType())
+        right = typeCast(right, left->getType()->getPointerElementType());
+
     return myBuilder.CreateStore(right, left);
     //return nullptr;
 }
@@ -305,6 +309,23 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
     llvm::Instruction::BinaryOps bi_op;
 
     if(op == PLUS || op == MINUS || op == MUL || op == DIV){
+        if (left->getType() != right->getType()) {
+            if (left->getType() == llvm::Type::getFloatTy(myContext)) {
+                right = typeCast(right, llvm::Type::getFloatTy(myContext));
+            } else {
+                if (right->getType() == llvm::Type::getFloatTy(myContext)) {
+                    left = typeCast(left, llvm::Type::getFloatTy(myContext));
+                } else {
+                    if (left->getType() == llvm::Type::getInt32Ty(myContext)) {
+                        right = typeCast(right, llvm::Type::getInt32Ty(myContext));
+                    } else if(right->getType() == llvm::Type::getInt32Ty(myContext)) {
+                        left = typeCast(left, llvm::Type::getInt32Ty(myContext));
+                    } else {
+                        throw logic_error("cann't use bool in +-*/");
+                    }
+                }
+            }
+        }
         if(op == PLUS){bi_op = llvm::Instruction::Add;}
         else if(op == MINUS){bi_op = llvm::Instruction::Sub;}
         else if(op == MUL){bi_op = llvm::Instruction::Mul;}
@@ -391,6 +412,9 @@ llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
     // 定位 block
     auto CurrentBlock = myBuilder.GetInsertBlock();
     
+    if (right->getType() != result->getType()->getPointerElementType())
+        right = typeCast(right, result->getType()->getPointerElementType());
+
     return new llvm::StoreInst(right, result, false, CurrentBlock);
 }
 
@@ -399,6 +423,9 @@ llvm::Value* BlockNode::emitter(EmitContext &emitContext){
     for(auto i : statementList){
         cout << "Generating code for " << typeid(*i).name() << endl;
         tmp = (*i).emitter(emitContext);
+        // 若当前语句为 reutrn , 则后面的语句需要截断
+        if(emitContext.hasReturn == true)
+            break;
     }
     cout << "" << endl;
 	return tmp;
@@ -432,8 +459,12 @@ llvm::Value* IfStatementNode::emitter(EmitContext &emitContext){
     emitContext.pushBlock();
     ifBlock.emitter(emitContext);
     emitContext.popBlock();
+
+    if(emitContext.hasReturn) 
+        emitContext.hasReturn = false;
     // 跳过 else
-    myBuilder.CreateBr(ThenBB);
+    else
+        myBuilder.CreateBr(ThenBB);
 
     myBuilder.SetInsertPoint(ThenBB);    
     return branch;
@@ -459,15 +490,23 @@ llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
     emitContext.pushBlock();
     ifBlock.emitter(emitContext);
     emitContext.popBlock();
+
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
     // 跳过 else
-    myBuilder.CreateBr(ThenBB);
+    else
+        myBuilder.CreateBr(ThenBB);
 
     myBuilder.SetInsertPoint(ElseBB);
     // 将 else 的域放入栈顶
     emitContext.pushBlock();
     elseBlock.emitter(emitContext);
     emitContext.popBlock();
-    myBuilder.CreateBr(ThenBB);
+
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
+    else
+        myBuilder.CreateBr(ThenBB);
 
     myBuilder.SetInsertPoint(ThenBB);    
     return branch;
@@ -497,7 +536,10 @@ llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
     // 将 while 的域放入栈顶
     emitContext.pushBlock();
     block.emitter(emitContext);
-    myBuilder.CreateBr(condBB);
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
+    else
+        myBuilder.CreateBr(condBB);
 
     // while 结束, 将 while 的域弹出栈顶
     emitContext.popBlock();
@@ -511,8 +553,11 @@ llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
 
     cout << "Generating return code for " << typeid(expression).name() << endl;
 	llvm::Value *rv = expression.emitter(emitContext);
+    if (rv->getType() != emitContext.returnVal->getType()->getPointerElementType())
+        rv = typeCast(rv, emitContext.returnVal->getType()->getPointerElementType());
     myBuilder.CreateStore(rv, emitContext.returnVal);
 
+    emitContext.hasReturn = true;
     return myBuilder.CreateBr(emitContext.returnBB);
 }
 
@@ -520,6 +565,7 @@ llvm::Value* ReturnVoidNode::emitter(EmitContext &emitContext){
     
     cout << "Generating return code for void " << endl;
 
+    emitContext.hasReturn = true;
     return myBuilder.CreateBr(emitContext.returnBB);
     //return myBuilder.CreateRetVoid();
 }
@@ -624,8 +670,7 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 	}
 	
 	block.emitter(emitContext);
-    //auto returnBlock = myBuilder.GetInsertBlock();
-	//llvm::ReturnInst::Create(myContext, emitContext.getReturnValue(), returnBlock);
+    emitContext.hasReturn = false;
 
     myBuilder.SetInsertPoint(emitContext.returnBB);
     if(type.name.compare("void") == 0) {
