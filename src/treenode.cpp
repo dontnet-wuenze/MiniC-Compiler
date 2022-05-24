@@ -419,13 +419,12 @@ llvm::Value* IfStatementNode::emitter(EmitContext &emitContext){
     llvm::Function *TheFunction = emitContext.currentFunc;
     
     llvm::BasicBlock *IfBB = llvm::BasicBlock::Create(myContext, "if", TheFunction);
-    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else",TheFunction);
-    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "afterifelse",TheFunction);
+    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "afterifonly",TheFunction);
 
     // 跳转判断语句
     llvm::Value *condValue = expression.emitter(emitContext), *thenValue = nullptr, *elseValue = nullptr;
     condValue = myBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(myContext), 0, true), "ifCond");
-    auto branch = myBuilder.CreateCondBr(condValue, IfBB, ElseBB);
+    auto branch = myBuilder.CreateCondBr(condValue, IfBB, ThenBB);
 
     myBuilder.SetInsertPoint(IfBB);
     // 将 if 的域放入栈顶
@@ -433,9 +432,6 @@ llvm::Value* IfStatementNode::emitter(EmitContext &emitContext){
     ifBlock.emitter(emitContext);
     emitContext.popBlock();
     // 跳过 else
-    myBuilder.CreateBr(ThenBB);
-
-    myBuilder.SetInsertPoint(ElseBB);
     myBuilder.CreateBr(ThenBB);
 
     myBuilder.SetInsertPoint(ThenBB);    

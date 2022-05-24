@@ -8,93 +8,6 @@
 "children" : 
 [
 {
-"name" : "Identifier: void"
-},
-{
-"name" : "Identifier: f"
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: a"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: printf"
-},
-{
-"name" : "StringValue: %d\n"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: a"
-},
-{
-"name" : "IntValue: 2"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: a"
-},
-{
-"name" : "IntValue: 4"
-},
-{
-"name" : "IntValue: 6"
-}
-]
-}
-]
-},
-{
-"name" : "ReturnVoid",
-"children" : 
-[
-]
-}
-]
-}
-]
-},
-{
-"name" : "FunctionDeclaration",
-"children" : 
-[
-{
 "name" : "Identifier: int"
 },
 {
@@ -112,72 +25,42 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: b"
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: b"
+"name" : "Identifier: i"
 },
 {
 "name" : "IntValue: 2"
-},
-{
-"name" : "IntValue: 3"
-}
-]
 }
 ]
 },
 {
-"name" : "ExpressionStatement",
+"name" : "IfOnlyStatement",
 "children" : 
 [
 {
-"name" : "FunctionCall",
+"name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: f"
+"name" : "Identifier: i"
 },
 {
-"name" : "Identifier: b"
+"name" : ">"
+},
+{
+"name" : "IntValue: 1"
 }
 ]
-}
-]
 },
 {
-"name" : "ExpressionStatement",
+"name" : "Block",
 "children" : 
 [
 {
-"name" : "FunctionCall",
+"name" : "ReturnStatement",
 "children" : 
 [
 {
-"name" : "Identifier: printf"
-},
-{
-"name" : "StringValue: b: %d\n"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: b"
-},
-{
-"name" : "IntValue: 4"
+"name" : "IntValue: 0"
 }
 ]
 }
