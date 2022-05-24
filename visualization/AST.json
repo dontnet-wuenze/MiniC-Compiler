@@ -4,38 +4,14 @@
 "children" : 
 [
 {
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: A"
-}
-]
-},
-{
 "name" : "FunctionDeclaration",
 "children" : 
 [
 {
-"name" : "Identifier: int"
+"name" : "Identifier: void"
 },
 {
-"name" : "Identifier: quicksort"
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: left"
-}
-]
+"name" : "Identifier: f"
 },
 {
 "name" : "VariableDeclaration",
@@ -45,7 +21,7 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: right"
+"name" : "Identifier: a"
 }
 ]
 },
@@ -54,128 +30,25 @@
 "children" : 
 [
 {
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: i"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: j"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: x"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: y"
-}
-]
-},
-{
 "name" : "ExpressionStatement",
 "children" : 
 [
 {
-"name" : "Assignment",
+"name" : "FunctionCall",
 "children" : 
 [
 {
-"name" : "Identifier: i"
+"name" : "Identifier: printf"
 },
 {
-"name" : "Identifier: left"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: j"
-},
-{
-"name" : "Identifier: right"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: x"
+"name" : "StringValue: %d\n"
 },
 {
 "name" : "ArrayElement",
 "children" : 
 [
 {
-"name" : "Identifier: A"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: left"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: right"
-}
-]
-},
-{
-"name" : "/"
+"name" : "Identifier: a"
 },
 {
 "name" : "IntValue: 2"
@@ -185,213 +58,6 @@
 ]
 }
 ]
-}
-]
-},
-{
-"name" : "WhileStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "<="
-},
-{
-"name" : "Identifier: j"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "WhileStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: A"
-},
-{
-"name" : "Identifier: i"
-}
-]
-},
-{
-"name" : "<"
-},
-{
-"name" : "Identifier: x"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "WhileStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: x"
-},
-{
-"name" : "<"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: A"
-},
-{
-"name" : "Identifier: j"
-}
-]
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: j"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: j"
-},
-{
-"name" : "-"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfElseStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "<="
-},
-{
-"name" : "Identifier: j"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: y"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: A"
-},
-{
-"name" : "Identifier: i"
-}
-]
-}
-]
-}
-]
 },
 {
 "name" : "ExpressionStatement",
@@ -402,237 +68,22 @@
 "children" : 
 [
 {
-"name" : "Identifier: A"
+"name" : "Identifier: a"
 },
 {
-"name" : "Identifier: i"
+"name" : "IntValue: 4"
 },
 {
-"name" : "ArrayElement",
+"name" : "IntValue: 6"
+}
+]
+}
+]
+},
+{
+"name" : "ReturnVoid",
 "children" : 
 [
-{
-"name" : "Identifier: A"
-},
-{
-"name" : "Identifier: j"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: A"
-},
-{
-"name" : "Identifier: j"
-},
-{
-"name" : "Identifier: y"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: j"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: j"
-},
-{
-"name" : "-"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfElseStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: left"
-},
-{
-"name" : "<"
-},
-{
-"name" : "Identifier: j"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: quicksort"
-},
-{
-"name" : "Identifier: left"
-},
-{
-"name" : "Identifier: j"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-]
-}
-]
-},
-{
-"name" : "IfElseStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "<"
-},
-{
-"name" : "Identifier: right"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: quicksort"
-},
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "Identifier: right"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-]
-}
-]
-},
-{
-"name" : "ReturnStatement",
-"children" : 
-[
-{
-"name" : "IntValue: 0"
-}
 ]
 }
 ]
@@ -661,7 +112,7 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: N"
+"name" : "Identifier: b"
 }
 ]
 },
@@ -670,161 +121,17 @@
 "children" : 
 [
 {
-"name" : "FunctionCall",
+"name" : "ArrayElementAssign",
 "children" : 
 [
 {
-"name" : "Identifier: scanf"
+"name" : "Identifier: b"
 },
 {
-"name" : "StringValue: \"%d\""
+"name" : "IntValue: 2"
 },
 {
-"name" : "Identifier: N"
-}
-]
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "WhileStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "<"
-},
-{
-"name" : "Identifier: N"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: scanf"
-},
-{
-"name" : "StringValue: \"%d\""
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: A"
-},
-{
-"name" : "Identifier: i"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: left"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: right"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: N"
-},
-{
-"name" : "-"
-},
-{
-"name" : "IntValue: 1"
+"name" : "IntValue: 3"
 }
 ]
 }
@@ -839,59 +146,15 @@
 "children" : 
 [
 {
-"name" : "Identifier: quicksort"
+"name" : "Identifier: f"
 },
 {
-"name" : "Identifier: left"
-},
-{
-"name" : "Identifier: right"
+"name" : "Identifier: b"
 }
 ]
 }
 ]
 },
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-}
-]
-},
-{
-"name" : "WhileStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "<"
-},
-{
-"name" : "Identifier: N"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
 {
 "name" : "ExpressionStatement",
 "children" : 
@@ -904,51 +167,17 @@
 "name" : "Identifier: printf"
 },
 {
-"name" : "StringValue: \"%d \""
+"name" : "StringValue: b: %d\n"
 },
 {
 "name" : "ArrayElement",
 "children" : 
 [
 {
-"name" : "Identifier: A"
+"name" : "Identifier: b"
 },
 {
-"name" : "Identifier: i"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: i"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
+"name" : "IntValue: 4"
 }
 ]
 }

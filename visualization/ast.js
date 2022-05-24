@@ -8,7 +8,7 @@ width = 2960 - margin.right - margin.left,
 height = 2800 - margin.top - margin.bottom;
 
 var root = {
-    "name": "AST",
+    "name": "Block",
     "children": []
 };
 

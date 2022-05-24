@@ -25,7 +25,8 @@
 %token <string> IDENTIFIER 
 %token <string> CONSTANT_INT CONSTANT_FLOAT CONSTANT_CHAR CONSTANT_STRING// 1, 1.0, 'a' "abc"
 %token <token> PLUS MINUS MUL DIV // +, -, *, /
-%token <token> AND OR // !, &&, ||
+%token <token> AND OR // &&, ||
+%token <token> NOT GAD // !, &
 %token <token> EQU NEQ LESST GREATERT LEQ GEQ // ==, !=, <, >, <=, >=
 %token <token> RETURN
 %token <token> IF ELSE WHILE BREAK 
@@ -79,6 +80,9 @@ statement:
     }
     | BREAK ';' {
         $$ = new BreakStatementNode(yylineno);
+    }
+    | IF '(' expression ')' block {
+        $$ = new IfStatementNode(*$3, *$5, yylineno);
     }
     | IF '(' expression ')' block ELSE block {
         $$ = new IfElseStatementNode(*$3, *$5, *$7, yylineno);
@@ -164,6 +168,12 @@ expression:
     }
     | identifier {
         $<identifier>$ = $1;
+    }
+    | GAD identifier {
+        $$ = new getAddrNode(*$2, yylineno);
+    }
+    | GAD identifier '[' expression ']' {
+        $$ = new getArrayAddrNode(*$2, *$4, yylineno);
     }
     | expression MUL expression {
         $$ = new BinaryOpNode($2, *$1, *$3, yylineno);

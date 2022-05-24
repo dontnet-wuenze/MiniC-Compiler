@@ -151,6 +151,25 @@ llvm::Value* IdentifierNode::getAddr(EmitContext &emitContext){
     return variable;
 }
 
+llvm::Value* getArrayAddrNode::emitter(EmitContext &emitContext){
+    cout<<"get arrayElement Addr:"<<rhs.name<<"[]"<<endl;
+
+    llvm::Value* arrayValue = emitContext.findVariable(rhs.name);
+    if(arrayValue == nullptr){
+        cerr << "undeclared array " << rhs.name << endl;
+		return nullptr;
+    }
+    // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
+    llvm::Value* indexValue = index.emitter(emitContext);
+    vector<llvm::Value*> indexList;
+    indexList.push_back(myBuilder.getInt32(0));
+    indexList.push_back(indexValue);
+    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "elePtr");
+    return elePtr;
+    //return nullptr;
+}
+
+
 // 数组在表达式中返回的是值
 llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){
     cout << "ArrayElementNode : " << identifier.name << "[]" << endl;
@@ -221,7 +240,15 @@ vector<llvm::Value *> *getPrintfArgs(EmitContext &emitContext,vector<ExpressionN
         printf_args->push_back(tmp);
     }
     return printf_args;
+}
 
+vector<llvm::Value *> *getScanfArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
+    vector<llvm::Value *> *scanf_args = new vector<llvm::Value *>;
+    for(auto it: args){
+        llvm::Value* tmp = it->emitter(emitContext);
+        scanf_args->push_back(tmp);
+    }
+    return scanf_args;
 }
 
 vector<llvm::Value *> *getScanfArgsAddr(EmitContext &emitContext,vector<ExpressionNode*>args){
@@ -240,7 +267,8 @@ llvm:: Value* emitPrintf(EmitContext &emitContext,vector<ExpressionNode*> args){
 }
 
 llvm:: Value* emitScanf(EmitContext &emitContext,vector<ExpressionNode*> args){
-    vector<llvm::Value *> *scanf_args = getScanfArgsAddr(emitContext, args);    
+    //vector<llvm::Value *> *scanf_args = getScanfArgsAddr(emitContext, args);    
+    vector<llvm::Value *> *scanf_args = getScanfArgs(emitContext, args);    
     return myBuilder.CreateCall(emitContext.scanf, *scanf_args, "scanf");
 }
 
@@ -336,6 +364,17 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
     }
 }
 
+llvm::Value* getAddrNode::emitter(EmitContext &emitContext){
+    cout << "getAddrNode : " << rhs.name << endl;
+    // 在符号表和全局变量中查找
+    llvm::Value* result = emitContext.findVariable(rhs.name);
+    if(result == nullptr){
+        cerr << "undeclared variable " << rhs.name << endl;
+		return nullptr;
+    }
+    return result;
+}
+
 // identifier = expression
 llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
     cout << "AssignmentNode,lhs: " << lhs.name << endl;
@@ -371,6 +410,36 @@ llvm::Value* ExpressionStatementNode::emitter(EmitContext &emitContext){
 
 llvm::Value* BreakStatementNode::emitter(EmitContext &emitContext){
     return myBuilder.CreateBr(GlobalAfterBB.top());
+}
+
+llvm::Value* IfStatementNode::emitter(EmitContext &emitContext){
+    cout << "Generating code for if-only"<<endl;
+
+    
+    llvm::Function *TheFunction = emitContext.currentFunc;
+    
+    llvm::BasicBlock *IfBB = llvm::BasicBlock::Create(myContext, "if", TheFunction);
+    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else",TheFunction);
+    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "afterifelse",TheFunction);
+
+    // 跳转判断语句
+    llvm::Value *condValue = expression.emitter(emitContext), *thenValue = nullptr, *elseValue = nullptr;
+    condValue = myBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(myContext), 0, true), "ifCond");
+    auto branch = myBuilder.CreateCondBr(condValue, IfBB, ElseBB);
+
+    myBuilder.SetInsertPoint(IfBB);
+    // 将 if 的域放入栈顶
+    emitContext.pushBlock();
+    ifBlock.emitter(emitContext);
+    emitContext.popBlock();
+    // 跳过 else
+    myBuilder.CreateBr(ThenBB);
+
+    myBuilder.SetInsertPoint(ElseBB);
+    myBuilder.CreateBr(ThenBB);
+
+    myBuilder.SetInsertPoint(ThenBB);    
+    return branch;
 }
 
 llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
@@ -524,7 +593,11 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {
 llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
     vector<llvm::Type*> argTypes;
     for(auto it : args){
-        argTypes.push_back(getLLvmType((*it).type.name));
+        if(it->size == 0)
+            argTypes.push_back(getLLvmType(it->type.name));
+        else {
+            argTypes.push_back(getArrayLLvmType(it->type.name, it->size));
+        }
     }
 	llvm::FunctionType *ftype = llvm::FunctionType::get(getLLvmType(type.name), makeArrayRef(argTypes), false);
 	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, identifier.name.c_str(), emitContext.myModule);
@@ -554,23 +627,6 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 	std::cout << "Creating function: " << identifier.name << endl;
 	return function;
 }
-
-// vector<llvm::Value *> *getPrintArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
-//     vector<llvm::Value *> *printf_args = new vector<llvm::Value *>;
-//     for(auto it: args){
-//         llvm::Value* tmp = it->emitter(emitContext);
-//         if (tmp->getType() == llvm::Type::getFloatTy(myContext))
-//             tmp = myBuilder.CreateFPExt(tmp, llvm::Type::getDoubleTy(myContext), "tmpdouble");
-//         printf_args->push_back(tmp);
-//     }
-//     return printf_args;
-
-// }
-
-// llvm:: Value* emitPrintf(EmitContext &emitContext,vector<ExpressionNode*> args){
-//     vector<llvm::Value *> *printf_args = getPrintArgs(emitContext,args);    
-//     return myBuilder.CreateCall(emitContext.printf, *printf_args, "printf");
-// }
 
 /*
 --------------------- Generate Json ----------------------
@@ -699,6 +755,32 @@ void BinaryOpNode::generateJson(string &s) {
     s.append("}");
 }
 
+void getAddrNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"getAddr\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->rhs.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void getArrayAddrNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"getArrayAddr\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->rhs.generateJson(s);
+
+    s.append(",");
+
+    this->index.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
 void AssignmentNode::generateJson(string &s) {
     s.append("\n{\n");
     s.append("\"name\" : \"Assignment\",\n");
@@ -738,6 +820,19 @@ void ExpressionStatementNode::generateJson(string &s) {
 void BreakStatementNode::generateJson(string &s) {
     s.append("\n{\n");
     s.append("\"name\" : break\n");
+    s.append("}");
+}
+
+void IfStatementNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"IfOnlyStatement\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->expression.generateJson(s);
+    s.append(",");
+    this->ifBlock.generateJson(s);
+
+    s.append("\n]\n");
     s.append("}");
 }
 

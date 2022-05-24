@@ -9,25 +9,25 @@ int main() {
     int A_N;
     int B_M;
     int B_N;
-    scanf("%d %d", A_M, A_N);
+    scanf("%d %d", &A_M, &A_N);
     int i = 0;
     int j = 0;
     while(i < A_M) {
         j = 0;
         while(j < A_N) {
-            scanf("%d", A[i * A_N + j]);
+            scanf("%d", &A[i * A_N + j]);
             j = j + 1;
         }
         i = i + 1;
     }
 
-    scanf("%d %d", B_M, B_N);
+    scanf("%d %d", &B_M, &B_N);
     i = 0;
     j = 0;
     while(i < B_M) {
         j = 0;
         while(j < B_N) {
-            scanf("%d", B[i * B_N + j]);
+            scanf("%d", &B[i * B_N + j]);
             j = j + 1;
         }
         i = i + 1;
@@ -35,8 +35,6 @@ int main() {
 
     if(A_N != B_M) {
         printf("Incompatible Dimensions\n");
-    } else {
-
     }
 
     i = 0;
