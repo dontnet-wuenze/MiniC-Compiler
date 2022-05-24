@@ -26,6 +26,13 @@ llvm::Type* getLLvmType(string type){ //通过type，返回对应的LLVM的Type
     return llvm::Type::getVoidTy(myContext);
 }
 
+llvm::Type* getPtrLLvmType(string type){ //对于指针形式，返回对应的LLVM的Type
+    if(type == "int"){return llvm::Type::getInt32PtrTy(myContext);}
+    else if(type == "float"){return llvm::Type::getFloatPtrTy(myContext);}
+    else if(type == "char"){return llvm::Type::getInt8PtrTy(myContext);}
+    return llvm::Type::getVoidTy(myContext);
+}
+
 llvm::Type* getArrayLLvmType(string type,int size){ //对于数组形式，返回对应的LLVM的Type
     if(type == "int"){ //int数组
         return llvm::ArrayType::get(llvm::Type::getInt32Ty(myContext), size);
@@ -63,11 +70,6 @@ llvm::Instruction::CastOps getCastInst(llvm::Type* src, llvm::Type* dst) {
 llvm::Value* typeCast(llvm::Value* src, llvm::Type* dst) {
     llvm::Instruction::CastOps op = getCastInst(src->getType(), dst);
     return myBuilder.CreateCast(op, src, dst, "tmptypecast");
-}
-
-llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::StringRef VarName, llvm::Type* type) {
-  llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
-  return TmpB.CreateAlloca(type, nullptr, VarName);
 }
 
 //emitter函数
@@ -138,7 +140,21 @@ llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
         return nullptr;
     }
     llvm::Type* tp = variable->getType()->getPointerElementType();
-    return new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
+    llvm::outs()<<"identifier type:"<<*tp;
+    cout<<endl;
+
+    llvm::Value* res = nullptr;
+    // 如果传入的是一个数组的 ID
+    if(tp->isArrayTy()) {
+        vector<llvm::Value*> indexList;
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(myBuilder.getInt32(0));
+        res = myBuilder.CreateInBoundsGEP(variable, indexList, "arrayPtr");
+    }
+    else {
+        res = new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
+    }
+    return res;
 }
 
 llvm::Value* IdentifierNode::getAddr(EmitContext &emitContext){
@@ -163,8 +179,19 @@ llvm::Value* getArrayAddrNode::emitter(EmitContext &emitContext){
     // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
-    indexList.push_back(myBuilder.getInt32(0));
-    indexList.push_back(indexValue);
+
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
+
     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "elePtr");
     return elePtr;
     //return nullptr;
@@ -183,8 +210,18 @@ llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){
 
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
-    indexList.push_back(myBuilder.getInt32(0));
-    indexList.push_back(indexValue);
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
+
     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
     return myBuilder.CreateLoad(elePtr->getType()->getPointerElementType(), elePtr, "tmpvar");
     //return myBuilder.CreateAlignedLoad(elePtr, 4);
@@ -202,8 +239,18 @@ llvm::Value* ArrayElementNode::getAddr(EmitContext &emitContext){
 
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
-    indexList.push_back(myBuilder.getInt32(0));
-    indexList.push_back(indexValue);
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
+
     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
     return elePtr;
     //return myBuilder.CreateAlignedLoad(elePtr, 4);
@@ -220,10 +267,25 @@ llvm::Value* ArrayElementAssignNode::emitter(EmitContext &emitContext){
     // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
-    indexList.push_back(myBuilder.getInt32(0));
-    indexList.push_back(indexValue);
+
+
+    llvm::outs()<<"arrayIdentifier type:"<<*(arrayValue->getType());
+    cout<<endl;
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
     llvm::Value* left =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
     llvm::Value *right = rhs.emitter(emitContext);
+
+    llvm::outs()<<*(left->getType()->getPointerElementType());
 
     if (right->getType() != left->getType()->getPointerElementType())
         right = typeCast(right, left->getType()->getPointerElementType());
@@ -621,14 +683,19 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {
             return nullptr;
             
         }
-        else{
-            cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;
+        else {
+            if(emitContext.isArgs) {
+                // 如果是函数中定义的数组需要返回 指针类型
+                cout << "Creating args array declaration " << type.name << " " << identifier.name<< endl;
+                llvmType = getPtrLLvmType(type.name);
+            } else {
+                cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;
+            }
             emitContext.getTopType()[identifier.name] = llvmType;
             auto *block = myBuilder.GetInsertBlock();
             llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
             emitContext.getTop()[identifier.name] = alloc;
             return alloc;
-
         }
     }
 
@@ -640,7 +707,7 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
         if(it->size == 0)
             argTypes.push_back(getLLvmType(it->type.name));
         else {
-            argTypes.push_back(getArrayLLvmType(it->type.name, it->size));
+            argTypes.push_back(getPtrLLvmType(it->type.name));
         }
     }
 	llvm::FunctionType *ftype = llvm::FunctionType::get(getLLvmType(type.name), makeArrayRef(argTypes), false);
@@ -662,12 +729,14 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 	llvm::Function::arg_iterator argsValues = function->arg_begin();
     llvm::Value* argumentValue;
 
+    emitContext.isArgs = true;
     for(auto it : args){
         (*it).emitter(emitContext);
         argumentValue = &*argsValues++;
         argumentValue->setName((it)->identifier.name.c_str());
         llvm::StoreInst *inst = new llvm::StoreInst(argumentValue, emitContext.getTop()[(it)->identifier.name], false, bblock);
 	}
+    emitContext.isArgs = false;
 	
 	block.emitter(emitContext);
     emitContext.hasReturn = false;

@@ -259,17 +259,6 @@ public:
   ExpressionNode *assignmentExpression;
 };
 
-// deprecated
-// class ArrayDeclarationNode : public StatementNode {
-// public:
-//   ArrayDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier) {}
-//   virtual llvm::Value* emitter(EmitContext &emitContext);
-// public:
-//   IdentifierNode &type;
-//   int size;
-//   IdentifierNode &identifier;
-// };
-
 class FunctionDeclarationNode : public StatementNode {
 public:
   FunctionDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, 

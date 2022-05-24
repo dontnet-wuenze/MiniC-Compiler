@@ -92,5 +92,6 @@ EmitContext::EmitContext(){
     this->printf = getPrintf();
     this->scanf = getScanf();
     this->hasReturn = false;
+    this->isArgs = false;
 }
 

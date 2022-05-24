@@ -1,0 +1,1896 @@
+[1mdiff --git a/src/Emit.cpp b/src/Emit.cpp[m
+[1mindex afa3609..f8795e2 100644[m
+[1m--- a/src/Emit.cpp[m
+[1m+++ b/src/Emit.cpp[m
+[36m@@ -92,5 +92,6 @@[m [mEmitContext::EmitContext(){[m
+     this->printf = getPrintf();[m
+     this->scanf = getScanf();[m
+     this->hasReturn = false;[m
+[32m+[m[32m    this->isArgs = false;[m[41m[m
+ }[m
+ [m
+[1mdiff --git a/src/Emit.h b/src/Emit.h[m
+[1mindex 46697e0..4baf916 100644[m
+[1m--- a/src/Emit.h[m
+[1m+++ b/src/Emit.h[m
+[36m@@ -49,6 +49,7 @@[m [mpublic:[m
+     llvm::Function* currentFunc;[m
+     llvm::BasicBlock* returnBB;[m
+     llvm::Value* returnVal;[m
+[32m+[m[32m    bool isArgs;[m[41m[m
+     bool hasReturn;[m
+ [m
+     EmitContext();[m
+[1mdiff --git a/src/treenode.cpp b/src/treenode.cpp[m
+[1mindex 7c1c38f..25e265e 100644[m
+[1m--- a/src/treenode.cpp[m
+[1m+++ b/src/treenode.cpp[m
+[36m@@ -26,6 +26,13 @@[m [mllvm::Type* getLLvmType(string type){ //通过type，返回对应的LLVM的Type[m
+     return llvm::Type::getVoidTy(myContext);[m
+ }[m
+ [m
+[32m+[m[32mllvm::Type* getPtrLLvmType(string type){ //对于指针形式，返回对应的LLVM的Type[m[41m[m
+[32m+[m[32m    if(type == "int"){return llvm::Type::getInt32PtrTy(myContext);}[m[41m[m
+[32m+[m[32m    else if(type == "float"){return llvm::Type::getFloatPtrTy(myContext);}[m[41m[m
+[32m+[m[32m    else if(type == "char"){return llvm::Type::getInt8PtrTy(myContext);}[m[41m[m
+[32m+[m[32m    return llvm::Type::getVoidTy(myContext);[m[41m[m
+[32m+[m[32m}[m[41m[m
+[32m+[m[41m[m
+ llvm::Type* getArrayLLvmType(string type,int size){ //对于数组形式，返回对应的LLVM的Type[m
+     if(type == "int"){ //int数组[m
+         return llvm::ArrayType::get(llvm::Type::getInt32Ty(myContext), size);[m
+[36m@@ -65,11 +72,6 @@[m [mllvm::Value* typeCast(llvm::Value* src, llvm::Type* dst) {[m
+     return myBuilder.CreateCast(op, src, dst, "tmptypecast");[m
+ }[m
+ [m
+[31m-llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::StringRef VarName, llvm::Type* type) {[m
+[31m-  llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());[m
+[31m-  return TmpB.CreateAlloca(type, nullptr, VarName);[m
+[31m-}[m
+[31m-[m
+ //emitter函数[m
+ [m
+ llvm::Value* IntNode::emitter(EmitContext &emitContext){[m
+[36m@@ -138,7 +140,21 @@[m [mllvm::Value* IdentifierNode::emitter(EmitContext &emitContext){[m
+         return nullptr;[m
+     }[m
+     llvm::Type* tp = variable->getType()->getPointerElementType();[m
+[31m-    return new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());[m
+[32m+[m[32m    llvm::outs()<<"identifier type:"<<*tp;[m[41m[m
+[32m+[m[32m    cout<<endl;[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m    llvm::Value* res = nullptr;[m[41m[m
+[32m+[m[32m    // 如果传入的是一个数组的 ID[m[41m[m
+[32m+[m[32m    if(tp->isArrayTy()) {[m[41m[m
+[32m+[m[32m        vector<llvm::Value*> indexList;[m[41m[m
+[32m+[m[32m        indexList.push_back(myBuilder.getInt32(0));[m[41m[m
+[32m+[m[32m        indexList.push_back(myBuilder.getInt32(0));[m[41m[m
+[32m+[m[32m        res = myBuilder.CreateInBoundsGEP(variable, indexList, "arrayPtr");[m[41m[m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[32m    else {[m[41m[m
+[32m+[m[32m        res = new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());[m[41m[m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[32m    return res;[m[41m[m
+ }[m
+ [m
+ llvm::Value* IdentifierNode::getAddr(EmitContext &emitContext){[m
+[36m@@ -163,8 +179,19 @@[m [mllvm::Value* getArrayAddrNode::emitter(EmitContext &emitContext){[m
+     // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];[m
+     llvm::Value* indexValue = index.emitter(emitContext);[m
+     vector<llvm::Value*> indexList;[m
+[31m-    indexList.push_back(myBuilder.getInt32(0));[m
+[31m-    indexList.push_back(indexValue);[m
+[32m+[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m    // 如果是一个指针[m[41m[m
+[32m+[m[32m    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {[m[41m[m
+[32m+[m[32m        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);[m[41m[m
+[32m+[m[32m        indexList.push_back(indexValue);[m[41m    [m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[32m    // 如果是一个数组[m[41m [m
+[32m+[m[32m    else {[m[41m[m
+[32m+[m[32m        indexList.push_back(myBuilder.getInt32(0));[m[41m[m
+[32m+[m[32m        indexList.push_back(indexValue);[m[41m    [m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[41m[m
+     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "elePtr");[m
+     return elePtr;[m
+     //return nullptr;[m
+[36m@@ -183,8 +210,18 @@[m [mllvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){[m
+ [m
+     llvm::Value* indexValue = index.emitter(emitContext);[m
+     vector<llvm::Value*> indexList;[m
+[31m-    indexList.push_back(myBuilder.getInt32(0));[m
+[31m-    indexList.push_back(indexValue);[m
+[32m+[m[41m[m
+[32m+[m[32m    // 如果是一个指针[m[41m[m
+[32m+[m[32m    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {[m[41m[m
+[32m+[m[32m        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);[m[41m[m
+[32m+[m[32m        indexList.push_back(indexValue);[m[41m    [m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[32m    // 如果是一个数组[m[41m [m
+[32m+[m[32m    else {[m[41m[m
+[32m+[m[32m        indexList.push_back(myBuilder.getInt32(0));[m[41m[m
+[32m+[m[32m        indexList.push_back(indexValue);[m[41m    [m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[41m[m
+     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");[m
+     return myBuilder.CreateLoad(elePtr->getType()->getPointerElementType(), elePtr, "tmpvar");[m
+     //return myBuilder.CreateAlignedLoad(elePtr, 4);[m
+[36m@@ -202,8 +239,18 @@[m [mllvm::Value* ArrayElementNode::getAddr(EmitContext &emitContext){[m
+ [m
+     llvm::Value* indexValue = index.emitter(emitContext);[m
+     vector<llvm::Value*> indexList;[m
+[31m-    indexList.push_back(myBuilder.getInt32(0));[m
+[31m-    indexList.push_back(indexValue);[m
+[32m+[m[41m[m
+[32m+[m[32m    // 如果是一个指针[m[41m[m
+[32m+[m[32m    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {[m[41m[m
+[32m+[m[32m        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);[m[41m[m
+[32m+[m[32m        indexList.push_back(indexValue);[m[41m    [m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[32m    // 如果是一个数组[m[41m [m
+[32m+[m[32m    else {[m[41m[m
+[32m+[m[32m        indexList.push_back(myBuilder.getInt32(0));[m[41m[m
+[32m+[m[32m        indexList.push_back(indexValue);[m[41m    [m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[41m[m
+     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");[m
+     return elePtr;[m
+     //return myBuilder.CreateAlignedLoad(elePtr, 4);[m
+[36m@@ -220,11 +267,26 @@[m [mllvm::Value* ArrayElementAssignNode::emitter(EmitContext &emitContext){[m
+     // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];[m
+     llvm::Value* indexValue = index.emitter(emitContext);[m
+     vector<llvm::Value*> indexList;[m
+[31m-    indexList.push_back(myBuilder.getInt32(0));[m
+[31m-    indexList.push_back(indexValue);[m
+[32m+[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m    llvm::outs()<<"arrayIdentifier type:"<<*(arrayValue->getType());[m[41m[m
+[32m+[m[32m    cout<<endl;[m[41m[m
+[32m+[m[41m[m
+[32m+[m[32m    // 如果是一个指针[m[41m[m
+[32m+[m[32m    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {[m[41m[m
+[32m+[m[32m        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);[m[41m[m
+[32m+[m[32m        indexList.push_back(indexValue);[m[41m    [m
+[32m+[m[32m    }[m[41m[m
+[32m+[m[32m    // 如果是一个数组[m[41m [m
+[32m+[m[32m    else {[m[41m[m
+[32m+[m[32m        indexList.push_back(myBuilder.getInt32(0));[m[41m[m
+[32m+[m[32m        indexList.push_back(indexValue);[m[41m    [m
+[32m+[m[32m    }[m[41m[m
+     llvm::Value* left =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");[m
+     llvm::Value *right = rhs.emitter(emitContext);[m
+ [m
+[32m+[m[32m    llvm::outs()<<*(left->getType()->getPointerElementType());[m[41m[m
+[32m+[m[41m[m
+     if (right->getType() != left->getType()->getPointerElementType())[m
+         right = typeCast(right, left->getType()->getPointerElementType());[m
+ [m
+[36m@@ -621,14 +683,19 @@[m [mllvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {[m
+             return nullptr;[m
+             [m
+         }[m
+[31m-        else{[m
+[31m-            cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;[m
+[32m+[m[32m        else {[m[41m[m
+[32m+[m[32m            if(emitContext.isArgs) {[m[41m[m
+[32m+[m[32m                // 如果是函数中定义的数组需要返回 指针类型[m[41m[m
+[32m+[m[32m                cout << "Creating args array declaration " << type.name << " " << identifier.name<< endl;[m[41m[m
+[32m+[m[32m                llvmType = getPtrLLvmType(type.name);[m[41m[m
+[32m+[m[32m            } else {[m[41m[m
+[32m+[m[32m                cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;[m[41m[m
+[32m+[m[32m            }[m[41m[m
+             emitContext.getTopType()[identifier.name] = llvmType;[m
+             auto *block = myBuilder.GetInsertBlock();[m
+             llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);[m
+             emitContext.getTop()[identifier.name] = alloc;[m
+             return alloc;[m
+[31m-[m
+         }[m
+     }[m
+ [m
+[36m@@ -640,7 +707,7 @@[m [mllvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){[m
+         if(it->size == 0)[m
+             argTypes.push_back(getLLvmType(it->type.name));[m
+         else {[m
+[31m-            argTypes.push_back(getArrayLLvmType(it->type.name, it->size));[m
+[32m+[m[32m            argTypes.push_back(getPtrLLvmType(it->type.name));[m[41m[m
+         }[m
+     }[m
+ 	llvm::FunctionType *ftype = llvm::FunctionType::get(getLLvmType(type.name), makeArrayRef(argTypes), false);[m
+[36m@@ -662,12 +729,14 @@[m [mllvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){[m
+ 	llvm::Function::arg_iterator argsValues = function->arg_begin();[m
+     llvm::Value* argumentValue;[m
+ [m
+[32m+[m[32m    emitContext.isArgs = true;[m[41m[m
+     for(auto it : args){[m
+         (*it).emitter(emitContext);[m
+         argumentValue = &*argsValues++;[m
+         argumentValue->setName((it)->identifier.name.c_str());[m
+         llvm::StoreInst *inst = new llvm::StoreInst(argumentValue, emitContext.getTop()[(it)->identifier.name], false, bblock);[m
+ 	}[m
+[32m+[m[32m    emitContext.isArgs = false;[m[41m[m
+ 	[m
+ 	block.emitter(emitContext);[m
+     emitContext.hasReturn = false;[m
+[1mdiff --git a/src/treenode.h b/src/treenode.h[m
+[1mindex 2c915e1..1f7403b 100644[m
+[1m--- a/src/treenode.h[m
+[1m+++ b/src/treenode.h[m
+[36m@@ -259,17 +259,6 @@[m [mpublic:[m
+   ExpressionNode *assignmentExpression;[m
+ };[m
+ [m
+[31m-// deprecated[m
+[31m-// class ArrayDeclarationNode : public StatementNode {[m
+[31m-// public:[m
+[31m-//   ArrayDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier) {}[m
+[31m-//   virtual llvm::Value* emitter(EmitContext &emitContext);[m
+[31m-// public:[m
+[31m-//   IdentifierNode &type;[m
+[31m-//   int size;[m
+[31m-//   IdentifierNode &identifier;[m
+[31m-// };[m
+[31m-[m
+ class FunctionDeclarationNode : public StatementNode {[m
+ public:[m
+   FunctionDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, [m
+[1mdiff --git a/test/quicksort/quicksort.c b/test/quicksort/quicksort.c[m
+[1mindex a5f9e90..3e8883b 100644[m
+[1m--- a/test/quicksort/quicksort.c[m
+[1m+++ b/test/quicksort/quicksort.c[m
+[36m@@ -2,7 +2,7 @@[m
+ [m
+ int A[200000];[m
+ [m
+[31m-void quicksort(int left, int right) {[m
+[32m+[m[32mvoid quicksort(int A[10], int left, int right) {[m
+     int i;[m
+     int j;[m
+     int x;[m
+[36m@@ -26,29 +26,30 @@[m [mvoid quicksort(int left, int right) {[m
+         }[m
+     }[m
+     if (left < j) {[m
+[31m-        quicksort(left, j);[m
+[32m+[m[32m        quicksort(A, left, j);[m
+     }[m
+     if (i < right) {[m
+[31m-        quicksort(i, right);[m
+[32m+[m[32m        quicksort(A, i, right);[m
+     } [m
+     return;[m
+ }[m
+ [m
+ int main()[m
+ {[m
+[32m+[m[32m    int B[10];[m
+     int N;[m
+     scanf("%d", &N);[m
+     int i = 0;[m
+     while(i < N) {[m
+[31m-        scanf("%d", &A[i]);[m
+[32m+[m[32m        scanf("%d", &B[i]);[m
+         i = i + 1;[m
+     }[m
+     int left = 0;[m
+     int right = N - 1;[m
+[31m-    quicksort(left, right);[m
+[32m+[m[32m    quicksort(B, left, right);[m
+     i = 0;[m
+     while(i < N) {[m
+[31m-        printf("%d ", A[i]);[m
+[32m+[m[32m        printf("%d ", B[i]);[m
+         i = i + 1;[m
+     }[m
+     [m
+[1mdiff --git a/visualization/AST.json b/visualization/AST.json[m
+[1mindex 6f09fd3..94bc57f 100644[m
+[1m--- a/visualization/AST.json[m
+[1m+++ b/visualization/AST.json[m
+[36m@@ -4,16 +4,14 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "VariableDeclaration",[m
+[32m+[m[32m"name" : "FunctionDeclaration",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: int"[m
+[32m+[m[32m"name" : "Identifier: void"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: quicksort"[m
+ },[m
+ {[m
+ "name" : "VariableDeclaration",[m
+[36m@@ -23,7 +21,7 @@[m
+ "name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: B"[m
+[32m+[m[32m"name" : "Identifier: A"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -35,19 +33,21 @@[m
+ "name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: C"[m
+[32m+[m[32m"name" : "Identifier: left"[m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "FunctionDeclaration",[m
+[32m+[m[32m"name" : "VariableDeclaration",[m
+ "children" : [m
+ [[m
+ {[m
+ "name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: main"[m
+[32m+[m[32m"name" : "Identifier: right"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+ },[m
+ {[m
+ "name" : "Block",[m
+[36m@@ -61,7 +61,7 @@[m
+ "name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A_M"[m
+[32m+[m[32m"name" : "Identifier: i"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -73,7 +73,7 @@[m
+ "name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A_N"[m
+[32m+[m[32m"name" : "Identifier: j"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -85,7 +85,7 @@[m
+ "name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: B_M"[m
+[32m+[m[32m"name" : "Identifier: x"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -97,7 +97,7 @@[m
+ "name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: B_N"[m
+[32m+[m[32m"name" : "Identifier: y"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -106,64 +106,85 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "FunctionCall",[m
+[32m+[m[32m"name" : "Assignment",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: scanf"[m
+[32m+[m[32m"name" : "Identifier: i"[m
+ },[m
+ {[m
+[31m-"name" : "StringValue: %d %d"[m
+[32m+[m[32m"name" : "Identifier: left"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+ },[m
+ {[m
+[31m-"name" : "getAddr",[m
+[32m+[m[32m"name" : "ExpressionStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: A_M"[m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "getAddr",[m
+[32m+[m[32m"name" : "Assignment",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: A_N"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: j"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Identifier: right"[m
+ }[m
+ ][m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "VariableDeclaration",[m
+[32m+[m[32m"name" : "ExpressionStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: int"[m
+[31m-},[m
+[32m+[m[32m"name" : "Assignment",[m
+[32m+[m[32m"children" :[m[41m [m
+[32m+[m[32m[[m
+ {[m
+[31m-"name" : "Identifier: i"[m
+[32m+[m[32m"name" : "Identifier: x"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 0"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "ArrayElement",[m
+[32m+[m[32m"children" :[m[41m [m
+[32m+[m[32m[[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Identifier: A"[m
+ },[m
+ {[m
+[31m-"name" : "VariableDeclaration",[m
+[32m+[m[32m"name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: int"[m
+[32m+[m[32m"name" : "BinaryOperation",[m
+[32m+[m[32m"children" :[m[41m [m
+[32m+[m[32m[[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Identifier: left"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[32m+[m[32m"name" : "+"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 0"[m
+[32m+[m[32m"name" : "Identifier: right"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "/"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "IntValue: 2"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+ }[m
+ ][m
+ },[m
+[36m@@ -179,10 +200,10 @@[m
+ "name" : "Identifier: i"[m
+ },[m
+ {[m
+[31m-"name" : "<"[m
+[32m+[m[32m"name" : "<="[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A_M"[m
+[32m+[m[32m"name" : "Identifier: j"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -191,39 +212,30 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[32m+[m[32m"name" : "WhileStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Assignment",[m
+[32m+[m[32m"name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "IntValue: 0"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "WhileStatement",[m
+[32m+[m[32m"name" : "ArrayElement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[32m+[m[32m"name" : "Identifier: A"[m
+[32m+[m[32m},[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[32m+[m[32m"name" : "Identifier: i"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+ },[m
+ {[m
+ "name" : "<"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A_N"[m
+[32m+[m[32m"name" : "Identifier: x"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -236,46 +248,26 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "FunctionCall",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: scanf"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "StringValue: %d"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "getArrayAddr",[m
+[32m+[m[32m"name" : "Assignment",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: A"[m
+[32m+[m[32m"name" : "Identifier: i"[m
+ },[m
+ {[m
+ "name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+ "name" : "Identifier: i"[m
+ },[m
+ {[m
+[31m-"name" : "*"[m
+[32m+[m[32m"name" : "+"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A_N"[m
+[32m+[m[32m"name" : "IntValue: 1"[m
+ }[m
+ ][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+ }[m
+ ][m
+ }[m
+[36m@@ -286,40 +278,38 @@[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[32m+[m[32m"name" : "WhileStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Assignment",[m
+[32m+[m[32m"name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[32m+[m[32m"name" : "Identifier: x"[m
+ },[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[32m+[m[32m"name" : "<"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "ArrayElement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[32m+[m[32m"name" : "Identifier: A"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 1"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: j"[m
+ }[m
+ ][m
+ }[m
+ ][m
+ },[m
+ {[m
+[32m+[m[32m"name" : "Block",[m
+[32m+[m[32m"children" :[m[41m [m
+[32m+[m[32m[[m
+[32m+[m[32m{[m
+ "name" : "ExpressionStatement",[m
+ "children" : [m
+ [[m
+[36m@@ -328,17 +318,17 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: i"[m
+[32m+[m[32m"name" : "Identifier: j"[m
+ },[m
+ {[m
+ "name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: i"[m
+[32m+[m[32m"name" : "Identifier: j"[m
+ },[m
+ {[m
+[31m-"name" : "+"[m
+[32m+[m[32m"name" : "-"[m
+ },[m
+ {[m
+ "name" : "IntValue: 1"[m
+[36m@@ -354,34 +344,48 @@[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[32m+[m[32m"name" : "IfOnlyStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "FunctionCall",[m
+[32m+[m[32m"name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: scanf"[m
+[32m+[m[32m"name" : "Identifier: i"[m
+ },[m
+ {[m
+[31m-"name" : "StringValue: %d %d"[m
+[32m+[m[32m"name" : "<="[m
+ },[m
+ {[m
+[31m-"name" : "getAddr",[m
+[32m+[m[32m"name" : "Identifier: j"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Block",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: B_M"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "ExpressionStatement",[m
+[32m+[m[32m"children" :[m[41m [m
+[32m+[m[32m[[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Assignment",[m
+[32m+[m[32m"children" :[m[41m [m
+[32m+[m[32m[[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Identifier: y"[m
+ },[m
+ {[m
+[31m-"name" : "getAddr",[m
+[32m+[m[32m"name" : "ArrayElement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: B_N"[m
+[32m+[m[32m"name" : "Identifier: A"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Identifier: i"[m
+ }[m
+ ][m
+ }[m
+[36m@@ -394,14 +398,26 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Assignment",[m
+[32m+[m[32m"name" : "ArrayElementAssign",[m
+ "children" : [m
+ [[m
+ {[m
+[32m+[m[32m"name" : "Identifier: A"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+ "name" : "Identifier: i"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 0"[m
+[32m+[m[32m"name" : "ArrayElement",[m
+[32m+[m[32m"children" :[m[41m [m
+[32m+[m[32m[[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Identifier: A"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Identifier: j"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+ }[m
+ ][m
+ }[m
+[36m@@ -412,24 +428,34 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Assignment",[m
+[32m+[m[32m"name" : "ArrayElementAssign",[m
+ "children" : [m
+ [[m
+ {[m
+[32m+[m[32m"name" : "Identifier: A"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+ "name" : "Identifier: j"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 0"[m
+[32m+[m[32m"name" : "Identifier: y"[m
+ }[m
+ ][m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "WhileStatement",[m
+[32m+[m[32m"name" : "ExpressionStatement",[m
+[32m+[m[32m"children" :[m[41m [m
+[32m+[m[32m[[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "Assignment",[m
+ "children" : [m
+ [[m
+ {[m
+[32m+[m[32m"name" : "Identifier: i"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+ "name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+[36m@@ -437,37 +463,57 @@[m
+ "name" : "Identifier: i"[m
+ },[m
+ {[m
+[31m-"name" : "<"[m
+[32m+[m[32m"name" : "+"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: B_M"[m
+[32m+[m[32m"name" : "IntValue: 1"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "Block",[m
+[32m+[m[32m"name" : "ExpressionStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[32m+[m[32m"name" : "Assignment",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Assignment",[m
+[32m+[m[32m"name" : "Identifier: j"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+ "name" : "Identifier: j"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 0"[m
+[32m+[m[32m"name" : "-"[m
+[32m+[m[32m},[m
+[32m+[m[32m{[m
+[32m+[m[32m"name" : "IntValue: 1"[m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+[32m+[m[32m}[m
+[32m+[m[32m][m
+ }[m
+ ][m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "WhileStatement",[m
+[32m+[m[32m"name" : "IfOnlyStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[36m@@ -475,13 +521,13 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[32m+[m[32m"name" : "Identifier: left"[m
+ },[m
+ {[m
+ "name" : "<"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: B_N"[m
+[32m+[m[32m"name" : "Identifier: j"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -498,39 +544,13 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: scanf"[m
+[32m+[m[32m"name" : "Identifier: quicksort"[m
+ },[m
+ {[m
+[31m-"name" : "StringValue: %d"[m
+[32m+[m[32m"name" : "Identifier: A"[m
+ },[m
+ {[m
+[31m-"name" : "getArrayAddr",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: B"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "*"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: B_N"[m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[32m+[m[32m"name" : "Identifier: left"[m
+ },[m
+ {[m
+ "name" : "Identifier: j"[m
+[36m@@ -544,74 +564,6 @@[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Assignment",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "IntValue: 1"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Assignment",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "IntValue: 1"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+ "name" : "IfOnlyStatement",[m
+ "children" : [m
+ [[m
+[36m@@ -620,13 +572,13 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: A_N"[m
+[32m+[m[32m"name" : "Identifier: i"[m
+ },[m
+ {[m
+[31m-"name" : "!="[m
+[32m+[m[32m"name" : "<"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: B_M"[m
+[32m+[m[32m"name" : "Identifier: right"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -643,168 +595,95 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: printf"[m
+[32m+[m[32m"name" : "Identifier: quicksort"[m
+ },[m
+ {[m
+[31m-"name" : "StringValue: Incompatible Dimensions\n"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: A"[m
+ },[m
+ {[m
+[31m-"name" : "ReturnStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[32m+[m[32m"name" : "Identifier: i"[m
+[32m+[m[32m},[m
+ {[m
+[31m-"name" : "IntValue: 0"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: right"[m
+ }[m
+ ][m
+ }[m
+ ][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Assignment",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "IntValue: 0"[m
+ }[m
+ ][m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Assignment",[m
+[32m+[m[32m"name" : "ReturnVoid",[m
+ "children" : [m
+ [[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "IntValue: 0"[m
+[32m+[m[32m][m
+ }[m
+ ][m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "WhileStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[32m+[m[32m"name" : "FunctionDeclaration",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "<"[m
+[32m+[m[32m"name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A_M"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: main"[m
+ },[m
+ {[m
+ "name" : "Block",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Assignment",[m
+[32m+[m[32m"name" : "VariableDeclaration",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[32m+[m[32m"name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 0"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: B"[m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "WhileStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[32m+[m[32m"name" : "VariableDeclaration",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "<"[m
+[32m+[m[32m"name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: B_N"[m
+[32m+[m[32m"name" : "Identifier: N"[m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "Block",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+ "name" : "ExpressionStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "ArrayElementAssign",[m
+[32m+[m[32m"name" : "FunctionCall",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: C"[m
+[32m+[m[32m"name" : "Identifier: scanf"[m
+ },[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[32m+[m[32m"name" : "StringValue: %d"[m
+[32m+[m[32m},[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[32m+[m[32m"name" : "getAddr",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "*"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: B_N"[m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[32m+[m[32m"name" : "Identifier: N"[m
+ }[m
+ ][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "IntValue: 0"[m
+ }[m
+ ][m
+ }[m
+[36m@@ -818,7 +697,7 @@[m
+ "name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: k"[m
+[32m+[m[32m"name" : "Identifier: i"[m
+ },[m
+ {[m
+ "name" : "IntValue: 0"[m
+[36m@@ -834,13 +713,13 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: k"[m
+[32m+[m[32m"name" : "Identifier: i"[m
+ },[m
+ {[m
+ "name" : "<"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A_N"[m
+[32m+[m[32m"name" : "Identifier: N"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -853,158 +732,54 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "ArrayElementAssign",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: C"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[32m+[m[32m"name" : "FunctionCall",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "*"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: B_N"[m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[32m+[m[32m"name" : "Identifier: scanf"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "StringValue: %d"[m
+ },[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "ArrayElement",[m
+[32m+[m[32m"name" : "getArrayAddr",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: C"[m
+[32m+[m[32m"name" : "Identifier: B"[m
+ },[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+ "name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "*"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: B_N"[m
+ }[m
+ ][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+ }[m
+ ][m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "ArrayElement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: A"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[32m+[m[32m"name" : "ExpressionStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[32m+[m[32m"name" : "Assignment",[m
+ "children" : [m
+ [[m
+ {[m
+ "name" : "Identifier: i"[m
+ },[m
+ {[m
+[31m-"name" : "*"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: A_N"[m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: k"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "*"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "ArrayElement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: B"[m
+[31m-},[m
+[31m-{[m
+ "name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: k"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "*"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: B_N"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: i"[m
+ },[m
+ {[m
+ "name" : "+"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "IntValue: 1"[m
+ }[m
+ ][m
+ }[m
+[36m@@ -1017,59 +792,39 @@[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Assignment",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: k"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[32m+[m[32m"name" : "VariableDeclaration",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: k"[m
+[32m+[m[32m"name" : "Identifier: int"[m
+ },[m
+ {[m
+[31m-"name" : "+"[m
+[32m+[m[32m"name" : "Identifier: left"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 1"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "IntValue: 0"[m
+ }[m
+ ][m
+ },[m
+ {[m
+[31m-"name" : "ExpressionStatement",[m
+[32m+[m[32m"name" : "VariableDeclaration",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Assignment",[m
+[31m-"children" : [m
+[31m-[[m
+[32m+[m[32m"name" : "Identifier: int"[m
+[32m+[m[32m},[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[32m+[m[32m"name" : "Identifier: right"[m
+ },[m
+ {[m
+ "name" : "BinaryOperation",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: j"[m
+[32m+[m[32m"name" : "Identifier: N"[m
+ },[m
+ {[m
+[31m-"name" : "+"[m
+[32m+[m[32m"name" : "-"[m
+ },[m
+ {[m
+ "name" : "IntValue: 1"[m
+[36m@@ -1077,42 +832,26 @@[m
+ ][m
+ }[m
+ ][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+ },[m
+ {[m
+ "name" : "ExpressionStatement",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Assignment",[m
+[32m+[m[32m"name" : "FunctionCall",[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: i"[m
+[32m+[m[32m"name" : "Identifier: quicksort"[m
+ },[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: i"[m
+[32m+[m[32m"name" : "Identifier: B"[m
+ },[m
+ {[m
+[31m-"name" : "+"[m
+[32m+[m[32m"name" : "Identifier: left"[m
+ },[m
+ {[m
+[31m-"name" : "IntValue: 1"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[32m+[m[32m"name" : "Identifier: right"[m
+ }[m
+ ][m
+ }[m
+[36m@@ -1151,48 +890,7 @@[m
+ "name" : "<"[m
+ },[m
+ {[m
+[31m-"name" : "Identifier: A_M"[m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Block",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Assignment",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "IntValue: 0"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "WhileStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "<"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: B_N"[m
+[32m+[m[32m"name" : "Identifier: N"[m
+ }[m
+ ][m
+ },[m
+[36m@@ -1219,90 +917,14 @@[m
+ "children" : [m
+ [[m
+ {[m
+[31m-"name" : "Identifier: C"[m
+[32m+[m[32m"name" : "Identifier: B"[m
+ },[m
+ {[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+ "name" : "Identifier: i"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "*"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: B_N"[m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Assignment",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "BinaryOperation",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: j"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "+"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "IntValue: 1"[m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+[31m-}[m
+[31m-][m
+ }[m
+ ][m
+ }[m
+ ][m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "ExpressionStatement",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "FunctionCall",[m
+[31m-"children" : [m
+[31m-[[m
+[31m-{[m
+[31m-"name" : "Identifier: printf"[m
+[31m-},[m
+[31m-{[m
+[31m-"name" : "StringValue: \n"[m
+[31m-}[m
+[31m-][m
+ }[m
+ ][m
+ },[m
+[1mdiff --git a/wez_room/function.ll b/wez_room/function.ll[m
+[1mindex bd9aa9a..ad99c6a 100644[m
+[1m--- a/wez_room/function.ll[m
+[1m+++ b/wez_room/function.ll[m
+[36m@@ -1,31 +1,50 @@[m
+ ; ModuleID = 'main'[m
+ source_filename = "main"[m
+ [m
+[32m+[m[32m@_Const_String_ = private constant [4 x i8] c"%d\0A\00"[m
+[32m+[m[32m@_Const_String_.1 = private constant [4 x i8] c"%d\0A\00"[m
+[32m+[m
+ declare i32 @printf(i8*, ...)[m
+ [m
+ declare i32 @scanf(...)[m
+ [m
+[32m+[m[32mdefine void @f(i32* %a1, i32 %b2) {[m
+[32m+[m[32mentry:[m
+[32m+[m[32m  %a = alloca i32*[m
+[32m+[m[32m  store i32* %a1, i32** %a[m
+[32m+[m[32m  %b = alloca i32[m
+[32m+[m[32m  store i32 %b2, i32* %b[m
+[32m+[m[32m  %0 = load i32*, i32** %a[m
+[32m+[m[32m  %tmparray = getelementptr inbounds i32, i32* %0, i32 4[m
+[32m+[m[32m  %tmpvar = load i32, i32* %tmparray[m
+[32m+[m[32m  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @_Const_String_, i32 0, i32 0), i32 %tmpvar)[m
+[32m+[m[32m  %1 = load i32*, i32** %a[m
+[32m+[m[32m  %tmpvar3 = getelementptr inbounds i32, i32* %1, i32 2[m
+[32m+[m[32m  store i32 2, i32* %tmpvar3[m
+[32m+[m[32m  br label %return[m
+[32m+[m
+[32m+[m[32mreturn:                                           ; preds = %entry[m
+[32m+[m[32m  ret void[m
+[32m+[m[32m}[m
+[32m+[m
+ define i32 @main() {[m
+ entry:[m
+   %0 = alloca i32[m
+[32m+[m[32m  %b = alloca [10 x i32][m
+[32m+[m[32m  %tmpvar = getelementptr inbounds [10 x i32], [10 x i32]* %b, i32 0, i32 4[m
+[32m+[m[32m  store i32 4, i32* %tmpvar[m
+[32m+[m[32m  %c = alloca i32[m
+[32m+[m[32m  store i32 2, i32* %c[m
+[32m+[m[32m  %arrayPtr = getelementptr inbounds [10 x i32], [10 x i32]* %b, i32 0, i32 0[m
+[32m+[m[32m  %LoadInst = load i32, i32* %c[m
+[32m+[m[32m  call void @f(i32* %arrayPtr, i32 %LoadInst)[m
+[32m+[m[32m  %tmparray = getelementptr inbounds [10 x i32], [10 x i32]* %b, i32 0, i32 2[m
+[32m+[m[32m  %tmpvar1 = load i32, i32* %tmparray[m
+[32m+[m[32m  %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @_Const_String_.1, i32 0, i32 0), i32 %tmpvar1)[m
+   store i32 0, i32* %0[m
+[31m-  %i = alloca i32[m
+[31m-  store i32 2, i32* %i[m
+[31m-  %LoadInst = load i32, i32* %i[m
+[31m-  %icmptmp = icmp sgt i32 %LoadInst, 1[m
+[31m-  %ifCond = icmp ne i1 %icmptmp, false[m
+[31m-  br i1 %ifCond, label %if, label %afterifonly[m
+[32m+[m[32m  br label %return[m
+ [m
+[31m-return:                                           ; preds = %afterifonly, %if[m
+[32m+[m[32mreturn:                                           ; preds = %entry[m
+   %1 = load i32, i32* %0[m
+   ret i32 %1[m
+[31m-[m
+[31m-if:                                               ; preds = %entry[m
+[31m-  store i32 0, i32* %0[m
+[31m-  br label %return[m
+[31m-  br label %afterifonly[m
+[31m-[m
+[31m-afterifonly:                                      ; preds = %if, %entry[m
+[31m-  store i32 0, i32* %0[m
+[31m-  br label %return[m
+ }[m
+\ No newline at end of file[m
+[1mdiff --git a/wez_room/quicksort.ll b/wez_room/quicksort.ll[m
+[1mindex 52eac3e..a878833 100644[m
+[1m--- a/wez_room/quicksort.ll[m
+[1m+++ b/wez_room/quicksort.ll[m
+[36m@@ -33,7 +33,10 @@[m [mentry:[m
+   store i32 %tmpvar, i32* %x[m
+   br label %cond[m
+ [m
+[31m-cond:                                             ; preds = %afterifelse, %entry[m
+[32m+[m[32mreturn:                                           ; preds = %afterifonly53[m
+[32m+[m[32m  ret void[m
+[32m+[m
+[32m+[m[32mcond:                                             ; preds = %afterifonly, %entry[m
+   %LoadInst6 = load i32, i32* %i[m
+   %LoadInst7 = load i32, i32* %j[m
+   %icmptmp = icmp sle i32 %LoadInst6, %LoadInst7[m
+[36m@@ -44,11 +47,11 @@[m [mloop:                                             ; preds = %cond[m
+   br label %cond8[m
+ [m
+ afterLoop:                                        ; preds = %cond[m
+[31m-  %LoadInst47 = load i32, i32* %left[m
+[31m-  %LoadInst48 = load i32, i32* %j[m
+[31m-  %icmptmp49 = icmp slt i32 %LoadInst47, %LoadInst48[m
+[31m-  %ifCond50 = icmp ne i1 %icmptmp49, false[m
+[31m-  br i1 %ifCond50, label %if44, label %else45[m
+[32m+[m[32m  %LoadInst46 = load i32, i32* %left[m
+[32m+[m[32m  %LoadInst47 = load i32, i32* %j[m
+[32m+[m[32m  %icmptmp48 = icmp slt i32 %LoadInst46, %LoadInst47[m
+[32m+[m[32m  %ifCond49 = icmp ne i1 %icmptmp48, false[m
+[32m+[m[32m  br i1 %ifCond49, label %if44, label %afterifonly45[m
+ [m
+ cond8:                                            ; preds = %loop9, %loop[m
+   %LoadInst11 = load i32, i32* %i[m
+[36m@@ -88,7 +91,7 @@[m [mafterLoop20:                                      ; preds = %cond18[m
+   %LoadInst29 = load i32, i32* %j[m
+   %icmptmp30 = icmp sle i32 %LoadInst28, %LoadInst29[m
+   %ifCond = icmp ne i1 %icmptmp30, false[m
+[31m-  br i1 %ifCond, label %if, label %else[m
+[32m+[m[32m  br i1 %ifCond, label %if, label %afterifonly[m
+ [m
+ if:                                               ; preds = %afterLoop20[m
+   %LoadInst31 = load i32, i32* %i[m
+[36m@@ -111,51 +114,47 @@[m [mif:                                               ; preds = %afterLoop20[m
+   %LoadInst43 = load i32, i32* %j[m
+   %5 = sub i32 %LoadInst43, 1[m
+   store i32 %5, i32* %j[m
+[31m-  br label %afterifelse[m
+[32m+[m[32m  br label %afterifonly[m
+ [m
+[31m-else:                                             ; preds = %afterLoop20[m
+[31m-  br label %afterifelse[m
+[31m-[m
+[31m-afterifelse:                                      ; preds = %else, %if[m
+[32m+[m[32mafterifonly:                                      ; preds = %if, %afterLoop20[m
+   br label %cond[m
+ [m
+ if44:                                             ; preds = %afterLoop[m
+[31m-  %LoadInst51 = load i32, i32* %left[m
+[31m-  %LoadInst52 = load i32, i32* %j[m
+[31m-  call void @quicksort(i32 %LoadInst51, i32 %LoadInst52)[m
+[31m-  br label %afterifelse46[m
+[31m-[m
+[31m-else45:                                           ; preds = %afterLoop[m
+[31m-  br label %afterifelse46[m
+[31m-[m
+[31m-afterifelse46:                                    ; preds = %else45, %if44[m
+[31m-  %LoadInst56 = load i32, i32* %i[m
+[31m-  %LoadInst57 = load i32, i32* %right[m
+[31m-  %icmptmp58 = icmp slt i32 %LoadInst56, %LoadInst57[m
+[31m-  %ifCond59 = icmp ne i1 %icmptmp58, false[m
+[31m-  br i1 %ifCond59, label %if53, label %else54[m
+[31m-[m
+[31m-if53:                                             ; preds = %afterifelse46[m
+[31m-  %LoadInst60 = load i32, i32* %i[m
+[31m-  %LoadInst61 = load i32, i32* %right[m
+[31m-  call void @quicksort(i32 %LoadInst60, i32 %LoadInst61)[m
+[31m-  br label %afterifelse55[m
+[31m-[m
+[31m-else54:                                           ; preds = %afterifelse46[m
+[31m-  br label %afterifelse55[m
+[31m-[m
+[31m-afterifelse55:                                    ; preds = %else54, %if53[m
+[31m-  ret void[m
+[32m+[m[32m  %LoadInst50 = load i32, i32* %left[m
+[32m+[m[32m  %LoadInst51 = load i32, i32* %j[m
+[32m+[m[32m  call void @quicksort(i32 %LoadInst50, i32 %LoadInst51)[m
+[32m+[m[32m  br label %afterifonly45[m
+[32m+[m
+[32m+[m[32mafterifonly45:                                    ; preds = %if44, %afterLoop[m
+[32m+[m[32m  %LoadInst54 = load i32, i32* %i[m
+[32m+[m[32m  %LoadInst55 = load i32, i32* %right[m
+[32m+[m[32m  %icmptmp56 = icmp slt i32 %LoadInst54, %LoadInst55[m
+[32m+[m[32m  %ifCond57 = icmp ne i1 %icmptmp56, false[m
+[32m+[m[32m  br i1 %ifCond57, label %if52, label %afterifonly53[m
+[32m+[m
+[32m+[m[32mif52:                                             ; preds = %afterifonly45[m
+[32m+[m[32m  %LoadInst58 = load i32, i32* %i[m
+[32m+[m[32m  %LoadInst59 = load i32, i32* %right[m
+[32m+[m[32m  call void @quicksort(i32 %LoadInst58, i32 %LoadInst59)[m
+[32m+[m[32m  br label %afterifonly53[m
+[32m+[m
+[32m+[m[32mafterifonly53:                                    ; preds = %if52, %afterifonly45[m
+[32m+[m[32m  br label %return[m
+ }[m
+ [m
+ define i32 @main() {[m
+ entry:[m
+[32m+[m[32m  %0 = alloca i32[m
+   %N = alloca i32[m
+   %scanf = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_, i32 0, i32 0), i32* %N)[m
+   %i = alloca i32[m
+   store i32 0, i32* %i[m
+   br label %cond[m
+ [m
+[32m+[m[32mreturn:                                           ; preds = %afterLoop10[m
+[32m+[m[32m  %1 = load i32, i32* %0[m
+[32m+[m[32m  ret i32 %1[m
+[32m+[m
+ cond:                                             ; preds = %loop, %entry[m
+   %LoadInst = load i32, i32* %i[m
+   %LoadInst1 = load i32, i32* %N[m
+[36m@@ -168,8 +167,8 @@[m [mloop:                                             ; preds = %cond[m
+   %elePtr = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst2[m
+   %scanf3 = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_.1, i32 0, i32 0), i32* %elePtr)[m
+   %LoadInst4 = load i32, i32* %i[m
+[31m-  %0 = add i32 %LoadInst4, 1[m
+[31m-  store i32 %0, i32* %i[m
+[32m+[m[32m  %2 = add i32 %LoadInst4, 1[m
+[32m+[m[32m  store i32 %2, i32* %i[m
+   br label %cond[m
+ [m
+ afterLoop:                                        ; preds = %cond[m
+[36m@@ -177,8 +176,8 @@[m [mafterLoop:                                        ; preds = %cond[m
+   store i32 0, i32* %left[m
+   %right = alloca i32[m
+   %LoadInst5 = load i32, i32* %N[m
+[31m-  %1 = sub i32 %LoadInst5, 1[m
+[31m-  store i32 %1, i32* %right[m
+[32m+[m[32m  %3 = sub i32 %LoadInst5, 1[m
+[32m+[m[32m  store i32 %3, i32* %right[m
+   %LoadInst6 = load i32, i32* %left[m
+   %LoadInst7 = load i32, i32* %right[m
+   call void @quicksort(i32 %LoadInst6, i32 %LoadInst7)[m
+[36m@@ -198,10 +197,11 @@[m [mloop9:                                            ; preds = %cond8[m
+   %tmpvar = load i32, i32* %tmparray[m
+   %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @_Const_String_.2, i32 0, i32 0), i32 %tmpvar)[m
+   %LoadInst16 = load i32, i32* %i[m
+[31m-  %2 = add i32 %LoadInst16, 1[m
+[31m-  store i32 %2, i32* %i[m
+[32m+[m[32m  %4 = add i32 %LoadInst16, 1[m
+[32m+[m[32m  store i32 %4, i32* %i[m
+   br label %cond8[m
+ [m
+ afterLoop10:                                      ; preds = %cond8[m
+[31m-  ret i32 0[m
+[32m+[m[32m  store i32 0, i32* %0[m
+[32m+[m[32m  br label %return[m
+ }[m
+\ No newline at end of file[m
