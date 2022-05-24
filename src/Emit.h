@@ -47,6 +47,10 @@ public:
     llvm::Module *myModule; 
     llvm::Function *printf,*scanf;
     llvm::Function* currentFunc;
+    llvm::BasicBlock* returnBB;
+    llvm::Value* returnVal;
+    bool isArgs;
+    bool hasReturn;
 
     EmitContext();
     //~EmitContext();

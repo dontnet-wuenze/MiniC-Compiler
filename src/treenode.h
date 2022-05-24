@@ -110,36 +110,6 @@ public:
   ExpressionNode &rhs;
 };
 
-// deprecated
-// class IntArrayElementNode : public ExpressionNode {
-// public:
-//   IntArrayElementNode(IdentifierNode& identifier, int index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
-//   llvm::Value *emitter(EmitContext &emitContext);
-// public:
-//   IdentifierNode& identifier;
-//   int index;
-// };
-
-// deprecated
-// class FloatArrayElementNode : public ExpressionNode {
-// public:
-//   FloatArrayElementNode(IdentifierNode& identifier, int index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
-//   llvm::Value *emitter(EmitContext &emitContext);
-// public:
-//   IdentifierNode& identifier;
-//   int index;
-// };
-
-// deprecated
-// class CharArrayElementNode : public ExpressionNode { 
-// public:
-//   CharArrayElementNode(IdentifierNode& identifier, int index, int lineNo) : ExpressionNode(lineNo), identifier(identifier), index(index) {}
-//   llvm::Value *emitter(EmitContext &emitContext);
-// public:
-//   IdentifierNode& identifier;
-//   int index;
-// };
-
 class FunctionCallNode : public ExpressionNode {
 public:
   FunctionCallNode(IdentifierNode &identifier, vector<ExpressionNode*> &args, int lineNo) : ExpressionNode(lineNo), identifier(identifier), args(args) {}
@@ -160,6 +130,25 @@ public:
   int op;
   ExpressionNode& lhs;
   ExpressionNode& rhs;
+};
+
+class getAddrNode : public ExpressionNode {  //取地址运算符
+public:
+  getAddrNode(IdentifierNode &rhs, int lineNo) : ExpressionNode(lineNo), rhs(rhs) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
+public:
+  IdentifierNode& rhs;
+};
+
+class getArrayAddrNode : public ExpressionNode {  //取地址运算符
+public:
+  getArrayAddrNode(IdentifierNode &rhs, ExpressionNode &index, int lineNo) : ExpressionNode(lineNo), index(index), rhs(rhs) {}
+  llvm::Value *emitter(EmitContext &emitContext);
+  void generateJson(string &s);
+public:
+  ExpressionNode& index;
+  IdentifierNode& rhs;
 };
 
 class AssignmentNode : public ExpressionNode {
@@ -209,6 +198,17 @@ public:
   BlockNode &elseBlock;
 };
 
+class IfStatementNode : public StatementNode {
+public:
+  IfStatementNode(ExpressionNode &expression, BlockNode &ifBlock, int lineNo)
+    : StatementNode(lineNo), expression(expression), ifBlock(ifBlock) {}
+  virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
+public:
+  ExpressionNode &expression;
+  BlockNode &ifBlock;
+};
+
 class WhileStatementNode : public StatementNode {
 public:
   WhileStatementNode(ExpressionNode &expression, BlockNode &block, int lineNo)
@@ -227,6 +227,14 @@ public:
   void generateJson(string &s);
 public:
   ExpressionNode &expression;
+};
+
+class ReturnVoidNode : public StatementNode {
+public:
+  ReturnVoidNode(int lineNo) : StatementNode(lineNo) {}
+  virtual llvm::Value* emitter(EmitContext &emitContext);
+  void generateJson(string &s);
+public:
 };
 
 class VariableDeclarationNode : public StatementNode {  //增加数组的声明
@@ -250,17 +258,6 @@ public:
   IdentifierNode &identifier;
   ExpressionNode *assignmentExpression;
 };
-
-// deprecated
-// class ArrayDeclarationNode : public StatementNode {
-// public:
-//   ArrayDeclarationNode(IdentifierNode &type, IdentifierNode &identifier, int lineNo) : StatementNode(lineNo), type(type), identifier(identifier) {}
-//   virtual llvm::Value* emitter(EmitContext &emitContext);
-// public:
-//   IdentifierNode &type;
-//   int size;
-//   IdentifierNode &identifier;
-// };
 
 class FunctionDeclarationNode : public StatementNode {
 public:

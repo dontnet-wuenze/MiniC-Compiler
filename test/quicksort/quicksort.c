@@ -2,7 +2,7 @@
 
 int A[200000];
 
-int quicksort(int left, int right) {
+void quicksort(int A[10], int left, int right) {
     int i;
     int j;
     int x;
@@ -23,37 +23,33 @@ int quicksort(int left, int right) {
             A[j] = y;
             i = i + 1;
             j = j - 1;
-        } else {}
+        }
     }
     if (left < j) {
-        quicksort(left, j);
-    } else{
-
+        quicksort(A, left, j);
     }
     if (i < right) {
-        quicksort(i, right);
+        quicksort(A, i, right);
     } 
-    else {
-
-    }
-    return 0;
+    return;
 }
 
 int main()
 {
+    int B[10];
     int N;
-    scanf("%d", N);
+    scanf("%d", &N);
     int i = 0;
     while(i < N) {
-        scanf("%d", A[i]);
+        scanf("%d", &B[i]);
         i = i + 1;
     }
     int left = 0;
     int right = N - 1;
-    quicksort(left, right);
+    quicksort(B, left, right);
     i = 0;
     while(i < N) {
-        printf("%d ", A[i]);
+        printf("%d ", B[i]);
         i = i + 1;
     }
     

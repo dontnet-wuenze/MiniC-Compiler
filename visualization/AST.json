@@ -4,6 +4,16 @@
 "children" : 
 [
 {
+"name" : "FunctionDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: void"
+},
+{
+"name" : "Identifier: quicksort"
+},
+{
 "name" : "VariableDeclaration",
 "children" : 
 [
@@ -14,16 +24,6 @@
 "name" : "Identifier: A"
 }
 ]
-},
-{
-"name" : "FunctionDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: quicksort"
 },
 {
 "name" : "VariableDeclaration",
@@ -344,7 +344,7 @@
 ]
 },
 {
-"name" : "IfElseStatement",
+"name" : "IfOnlyStatement",
 "children" : 
 [
 {
@@ -505,12 +505,6 @@
 ]
 }
 ]
-},
-{
-"name" : "Block",
-"children" : 
-[
-]
 }
 ]
 }
@@ -519,7 +513,7 @@
 ]
 },
 {
-"name" : "IfElseStatement",
+"name" : "IfOnlyStatement",
 "children" : 
 [
 {
@@ -553,6 +547,9 @@
 "name" : "Identifier: quicksort"
 },
 {
+"name" : "Identifier: A"
+},
+{
 "name" : "Identifier: left"
 },
 {
@@ -563,17 +560,11 @@
 ]
 }
 ]
-},
-{
-"name" : "Block",
-"children" : 
-[
-]
 }
 ]
 },
 {
-"name" : "IfElseStatement",
+"name" : "IfOnlyStatement",
 "children" : 
 [
 {
@@ -607,6 +598,9 @@
 "name" : "Identifier: quicksort"
 },
 {
+"name" : "Identifier: A"
+},
+{
 "name" : "Identifier: i"
 },
 {
@@ -617,22 +611,13 @@
 ]
 }
 ]
-},
-{
-"name" : "Block",
-"children" : 
-[
-]
 }
 ]
 },
 {
-"name" : "ReturnStatement",
+"name" : "ReturnVoid",
 "children" : 
 [
-{
-"name" : "IntValue: 0"
-}
 ]
 }
 ]
@@ -661,6 +646,18 @@
 "name" : "Identifier: int"
 },
 {
+"name" : "Identifier: B"
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
 "name" : "Identifier: N"
 }
 ]
@@ -677,10 +674,16 @@
 "name" : "Identifier: scanf"
 },
 {
-"name" : "StringValue: \"%d\""
+"name" : "StringValue: %d"
 },
 {
+"name" : "getAddr",
+"children" : 
+[
+{
 "name" : "Identifier: N"
+}
+]
 }
 ]
 }
@@ -736,14 +739,14 @@
 "name" : "Identifier: scanf"
 },
 {
-"name" : "StringValue: \"%d\""
+"name" : "StringValue: %d"
 },
 {
-"name" : "ArrayElement",
+"name" : "getArrayAddr",
 "children" : 
 [
 {
-"name" : "Identifier: A"
+"name" : "Identifier: B"
 },
 {
 "name" : "Identifier: i"
@@ -842,6 +845,9 @@
 "name" : "Identifier: quicksort"
 },
 {
+"name" : "Identifier: B"
+},
+{
 "name" : "Identifier: left"
 },
 {
@@ -904,14 +910,14 @@
 "name" : "Identifier: printf"
 },
 {
-"name" : "StringValue: \"%d \""
+"name" : "StringValue: %d "
 },
 {
 "name" : "ArrayElement",
 "children" : 
 [
 {
-"name" : "Identifier: A"
+"name" : "Identifier: B"
 },
 {
 "name" : "Identifier: i"

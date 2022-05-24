@@ -1,6 +1,7 @@
 #include "treenode.h"
 #include "parsing.hpp"
 #include "Emit.h"
+#include <llvm-10/llvm/IR/BasicBlock.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Function.h>
@@ -22,6 +23,13 @@ llvm::Type* getLLvmType(string type){ //通过type，返回对应的LLVM的Type
     if(type == "int"){return llvm::Type::getInt32Ty(myContext);}
     else if(type == "float"){return llvm::Type::getFloatTy(myContext);}
     else if(type == "char"){return llvm::Type::getInt8Ty(myContext);}
+    return llvm::Type::getVoidTy(myContext);
+}
+
+llvm::Type* getPtrLLvmType(string type){ //对于指针形式，返回对应的LLVM的Type
+    if(type == "int"){return llvm::Type::getInt32PtrTy(myContext);}
+    else if(type == "float"){return llvm::Type::getFloatPtrTy(myContext);}
+    else if(type == "char"){return llvm::Type::getInt8PtrTy(myContext);}
     return llvm::Type::getVoidTy(myContext);
 }
 
@@ -62,11 +70,6 @@ llvm::Instruction::CastOps getCastInst(llvm::Type* src, llvm::Type* dst) {
 llvm::Value* typeCast(llvm::Value* src, llvm::Type* dst) {
     llvm::Instruction::CastOps op = getCastInst(src->getType(), dst);
     return myBuilder.CreateCast(op, src, dst, "tmptypecast");
-}
-
-llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, llvm::StringRef VarName, llvm::Type* type) {
-  llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
-  return TmpB.CreateAlloca(type, nullptr, VarName);
 }
 
 //emitter函数
@@ -137,7 +140,21 @@ llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
         return nullptr;
     }
     llvm::Type* tp = variable->getType()->getPointerElementType();
-    return new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
+    llvm::outs()<<"identifier type:"<<*tp;
+    cout<<endl;
+
+    llvm::Value* res = nullptr;
+    // 如果传入的是一个数组的 ID
+    if(tp->isArrayTy()) {
+        vector<llvm::Value*> indexList;
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(myBuilder.getInt32(0));
+        res = myBuilder.CreateInBoundsGEP(variable, indexList, "arrayPtr");
+    }
+    else {
+        res = new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
+    }
+    return res;
 }
 
 llvm::Value* IdentifierNode::getAddr(EmitContext &emitContext){
@@ -151,6 +168,36 @@ llvm::Value* IdentifierNode::getAddr(EmitContext &emitContext){
     return variable;
 }
 
+llvm::Value* getArrayAddrNode::emitter(EmitContext &emitContext){
+    cout<<"get arrayElement Addr:"<<rhs.name<<"[]"<<endl;
+
+    llvm::Value* arrayValue = emitContext.findVariable(rhs.name);
+    if(arrayValue == nullptr){
+        cerr << "undeclared array " << rhs.name << endl;
+		return nullptr;
+    }
+    // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
+    llvm::Value* indexValue = index.emitter(emitContext);
+    vector<llvm::Value*> indexList;
+
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
+
+    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "elePtr");
+    return elePtr;
+    //return nullptr;
+}
+
+
 // 数组在表达式中返回的是值
 llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){
     cout << "ArrayElementNode : " << identifier.name << "[]" << endl;
@@ -163,8 +210,18 @@ llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){
 
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
-    indexList.push_back(myBuilder.getInt32(0));
-    indexList.push_back(indexValue);
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
+
     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
     return myBuilder.CreateLoad(elePtr->getType()->getPointerElementType(), elePtr, "tmpvar");
     //return myBuilder.CreateAlignedLoad(elePtr, 4);
@@ -182,8 +239,18 @@ llvm::Value* ArrayElementNode::getAddr(EmitContext &emitContext){
 
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
-    indexList.push_back(myBuilder.getInt32(0));
-    indexList.push_back(indexValue);
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
+
     llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
     return elePtr;
     //return myBuilder.CreateAlignedLoad(elePtr, 4);
@@ -200,10 +267,29 @@ llvm::Value* ArrayElementAssignNode::emitter(EmitContext &emitContext){
     // llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
-    indexList.push_back(myBuilder.getInt32(0));
-    indexList.push_back(indexValue);
+
+
+    llvm::outs()<<"arrayIdentifier type:"<<*(arrayValue->getType());
+    cout<<endl;
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
     llvm::Value* left =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
     llvm::Value *right = rhs.emitter(emitContext);
+
+    llvm::outs()<<*(left->getType()->getPointerElementType());
+
+    if (right->getType() != left->getType()->getPointerElementType())
+        right = typeCast(right, left->getType()->getPointerElementType());
+
     return myBuilder.CreateStore(right, left);
     //return nullptr;
 }
@@ -221,7 +307,15 @@ vector<llvm::Value *> *getPrintfArgs(EmitContext &emitContext,vector<ExpressionN
         printf_args->push_back(tmp);
     }
     return printf_args;
+}
 
+vector<llvm::Value *> *getScanfArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
+    vector<llvm::Value *> *scanf_args = new vector<llvm::Value *>;
+    for(auto it: args){
+        llvm::Value* tmp = it->emitter(emitContext);
+        scanf_args->push_back(tmp);
+    }
+    return scanf_args;
 }
 
 vector<llvm::Value *> *getScanfArgsAddr(EmitContext &emitContext,vector<ExpressionNode*>args){
@@ -240,7 +334,8 @@ llvm:: Value* emitPrintf(EmitContext &emitContext,vector<ExpressionNode*> args){
 }
 
 llvm:: Value* emitScanf(EmitContext &emitContext,vector<ExpressionNode*> args){
-    vector<llvm::Value *> *scanf_args = getScanfArgsAddr(emitContext, args);    
+    //vector<llvm::Value *> *scanf_args = getScanfArgsAddr(emitContext, args);    
+    vector<llvm::Value *> *scanf_args = getScanfArgs(emitContext, args);    
     return myBuilder.CreateCall(emitContext.scanf, *scanf_args, "scanf");
 }
 
@@ -276,6 +371,23 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
     llvm::Instruction::BinaryOps bi_op;
 
     if(op == PLUS || op == MINUS || op == MUL || op == DIV){
+        if (left->getType() != right->getType()) {
+            if (left->getType() == llvm::Type::getFloatTy(myContext)) {
+                right = typeCast(right, llvm::Type::getFloatTy(myContext));
+            } else {
+                if (right->getType() == llvm::Type::getFloatTy(myContext)) {
+                    left = typeCast(left, llvm::Type::getFloatTy(myContext));
+                } else {
+                    if (left->getType() == llvm::Type::getInt32Ty(myContext)) {
+                        right = typeCast(right, llvm::Type::getInt32Ty(myContext));
+                    } else if(right->getType() == llvm::Type::getInt32Ty(myContext)) {
+                        left = typeCast(left, llvm::Type::getInt32Ty(myContext));
+                    } else {
+                        throw logic_error("cann't use bool in +-*/");
+                    }
+                }
+            }
+        }
         if(op == PLUS){bi_op = llvm::Instruction::Add;}
         else if(op == MINUS){bi_op = llvm::Instruction::Sub;}
         else if(op == MUL){bi_op = llvm::Instruction::Mul;}
@@ -336,6 +448,17 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
     }
 }
 
+llvm::Value* getAddrNode::emitter(EmitContext &emitContext){
+    cout << "getAddrNode : " << rhs.name << endl;
+    // 在符号表和全局变量中查找
+    llvm::Value* result = emitContext.findVariable(rhs.name);
+    if(result == nullptr){
+        cerr << "undeclared variable " << rhs.name << endl;
+		return nullptr;
+    }
+    return result;
+}
+
 // identifier = expression
 llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
     cout << "AssignmentNode,lhs: " << lhs.name << endl;
@@ -351,6 +474,9 @@ llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
     // 定位 block
     auto CurrentBlock = myBuilder.GetInsertBlock();
     
+    if (right->getType() != result->getType()->getPointerElementType())
+        right = typeCast(right, result->getType()->getPointerElementType());
+
     return new llvm::StoreInst(right, result, false, CurrentBlock);
 }
 
@@ -359,6 +485,9 @@ llvm::Value* BlockNode::emitter(EmitContext &emitContext){
     for(auto i : statementList){
         cout << "Generating code for " << typeid(*i).name() << endl;
         tmp = (*i).emitter(emitContext);
+        // 若当前语句为 reutrn , 则后面的语句需要截断
+        if(emitContext.hasReturn == true)
+            break;
     }
     cout << "" << endl;
 	return tmp;
@@ -371,6 +500,36 @@ llvm::Value* ExpressionStatementNode::emitter(EmitContext &emitContext){
 
 llvm::Value* BreakStatementNode::emitter(EmitContext &emitContext){
     return myBuilder.CreateBr(GlobalAfterBB.top());
+}
+
+llvm::Value* IfStatementNode::emitter(EmitContext &emitContext){
+    cout << "Generating code for if-only"<<endl;
+
+    
+    llvm::Function *TheFunction = emitContext.currentFunc;
+    
+    llvm::BasicBlock *IfBB = llvm::BasicBlock::Create(myContext, "if", TheFunction);
+    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "afterifonly",TheFunction);
+
+    // 跳转判断语句
+    llvm::Value *condValue = expression.emitter(emitContext), *thenValue = nullptr, *elseValue = nullptr;
+    condValue = myBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(myContext), 0, true), "ifCond");
+    auto branch = myBuilder.CreateCondBr(condValue, IfBB, ThenBB);
+
+    myBuilder.SetInsertPoint(IfBB);
+    // 将 if 的域放入栈顶
+    emitContext.pushBlock();
+    ifBlock.emitter(emitContext);
+    emitContext.popBlock();
+
+    if(emitContext.hasReturn) 
+        emitContext.hasReturn = false;
+    // 跳过 else
+    else
+        myBuilder.CreateBr(ThenBB);
+
+    myBuilder.SetInsertPoint(ThenBB);    
+    return branch;
 }
 
 llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
@@ -393,15 +552,23 @@ llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
     emitContext.pushBlock();
     ifBlock.emitter(emitContext);
     emitContext.popBlock();
+
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
     // 跳过 else
-    myBuilder.CreateBr(ThenBB);
+    else
+        myBuilder.CreateBr(ThenBB);
 
     myBuilder.SetInsertPoint(ElseBB);
     // 将 else 的域放入栈顶
     emitContext.pushBlock();
     elseBlock.emitter(emitContext);
     emitContext.popBlock();
-    myBuilder.CreateBr(ThenBB);
+
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
+    else
+        myBuilder.CreateBr(ThenBB);
 
     myBuilder.SetInsertPoint(ThenBB);    
     return branch;
@@ -431,7 +598,10 @@ llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
     // 将 while 的域放入栈顶
     emitContext.pushBlock();
     block.emitter(emitContext);
-    myBuilder.CreateBr(condBB);
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
+    else
+        myBuilder.CreateBr(condBB);
 
     // while 结束, 将 while 的域弹出栈顶
     emitContext.popBlock();
@@ -442,11 +612,24 @@ llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
 }
 
 llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
+
     cout << "Generating return code for " << typeid(expression).name() << endl;
 	llvm::Value *rv = expression.emitter(emitContext);
-	//emitContext.setReturnValue(rv);
-	//return rv;
-    return myBuilder.CreateRet(rv);
+    if (rv->getType() != emitContext.returnVal->getType()->getPointerElementType())
+        rv = typeCast(rv, emitContext.returnVal->getType()->getPointerElementType());
+    myBuilder.CreateStore(rv, emitContext.returnVal);
+
+    emitContext.hasReturn = true;
+    return myBuilder.CreateBr(emitContext.returnBB);
+}
+
+llvm::Value* ReturnVoidNode::emitter(EmitContext &emitContext){
+    
+    cout << "Generating return code for void " << endl;
+
+    emitContext.hasReturn = true;
+    return myBuilder.CreateBr(emitContext.returnBB);
+    //return myBuilder.CreateRetVoid();
 }
 
 llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {  
@@ -500,14 +683,19 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {
             return nullptr;
             
         }
-        else{
-            cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;
+        else {
+            if(emitContext.isArgs) {
+                // 如果是函数中定义的数组需要返回 指针类型
+                cout << "Creating args array declaration " << type.name << " " << identifier.name<< endl;
+                llvmType = getPtrLLvmType(type.name);
+            } else {
+                cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;
+            }
             emitContext.getTopType()[identifier.name] = llvmType;
             auto *block = myBuilder.GetInsertBlock();
             llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
             emitContext.getTop()[identifier.name] = alloc;
             return alloc;
-
         }
     }
 
@@ -516,53 +704,56 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {
 llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
     vector<llvm::Type*> argTypes;
     for(auto it : args){
-        argTypes.push_back(getLLvmType((*it).type.name));
+        if(it->size == 0)
+            argTypes.push_back(getLLvmType(it->type.name));
+        else {
+            argTypes.push_back(getPtrLLvmType(it->type.name));
+        }
     }
 	llvm::FunctionType *ftype = llvm::FunctionType::get(getLLvmType(type.name), makeArrayRef(argTypes), false);
 	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, identifier.name.c_str(), emitContext.myModule);
 	llvm::BasicBlock *bblock = llvm::BasicBlock::Create(myContext, "entry", function, 0);
 
-    emitContext.currentFunc = function;
-
-	emitContext.pushBlock();
     myBuilder.SetInsertPoint(bblock);
+    emitContext.currentFunc = function;
+    emitContext.returnBB = llvm::BasicBlock::Create(myContext, "return", function, 0);
+
+    // 定义一个变量用来存储函数的返回值
+    if(type.name.compare("void") != 0) {
+        emitContext.returnVal = new llvm::AllocaInst(getLLvmType(type.name), bblock->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(), "", bblock);
+    }
+ 
+	emitContext.pushBlock();
+
  
 	llvm::Function::arg_iterator argsValues = function->arg_begin();
     llvm::Value* argumentValue;
 
+    emitContext.isArgs = true;
     for(auto it : args){
         (*it).emitter(emitContext);
         argumentValue = &*argsValues++;
         argumentValue->setName((it)->identifier.name.c_str());
         llvm::StoreInst *inst = new llvm::StoreInst(argumentValue, emitContext.getTop()[(it)->identifier.name], false, bblock);
 	}
+    emitContext.isArgs = false;
 	
 	block.emitter(emitContext);
-    //auto returnBlock = myBuilder.GetInsertBlock();
-	//llvm::ReturnInst::Create(myContext, emitContext.getReturnValue(), returnBlock);
+    emitContext.hasReturn = false;
+
+    myBuilder.SetInsertPoint(emitContext.returnBB);
+    if(type.name.compare("void") == 0) {
+        myBuilder.CreateRetVoid();
+    } else {
+        llvm::Value* ret = myBuilder.CreateLoad(getLLvmType(type.name), emitContext.returnVal, "");
+        myBuilder.CreateRet(ret);
+    }
 
 	emitContext.popBlock();
     emitContext.currentFunc = nullptr;
 	std::cout << "Creating function: " << identifier.name << endl;
 	return function;
 }
-
-// vector<llvm::Value *> *getPrintArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
-//     vector<llvm::Value *> *printf_args = new vector<llvm::Value *>;
-//     for(auto it: args){
-//         llvm::Value* tmp = it->emitter(emitContext);
-//         if (tmp->getType() == llvm::Type::getFloatTy(myContext))
-//             tmp = myBuilder.CreateFPExt(tmp, llvm::Type::getDoubleTy(myContext), "tmpdouble");
-//         printf_args->push_back(tmp);
-//     }
-//     return printf_args;
-
-// }
-
-// llvm:: Value* emitPrintf(EmitContext &emitContext,vector<ExpressionNode*> args){
-//     vector<llvm::Value *> *printf_args = getPrintArgs(emitContext,args);    
-//     return myBuilder.CreateCall(emitContext.printf, *printf_args, "printf");
-// }
 
 /*
 --------------------- Generate Json ----------------------
@@ -589,7 +780,7 @@ void CharNode::generateJson(string &s) {
 
 void StringNode::generateJson(string &s) {
     s.append("\n{\n");
-    s.append("\"name\" : \"StringValue: " + this->value + "\"\n");
+    s.append("\"name\" : \"StringValue: " + this->value.substr(1, this->value.length() - 2) + "\"\n");
     s.append("}");
 }
 
@@ -691,6 +882,32 @@ void BinaryOpNode::generateJson(string &s) {
     s.append("}");
 }
 
+void getAddrNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"getAddr\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->rhs.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void getArrayAddrNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"getArrayAddr\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->rhs.generateJson(s);
+
+    s.append(",");
+
+    this->index.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
 void AssignmentNode::generateJson(string &s) {
     s.append("\n{\n");
     s.append("\"name\" : \"Assignment\",\n");
@@ -733,6 +950,19 @@ void BreakStatementNode::generateJson(string &s) {
     s.append("}");
 }
 
+void IfStatementNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"IfOnlyStatement\",\n");
+    s.append("\"children\" : \n[");
+    
+    this->expression.generateJson(s);
+    s.append(",");
+    this->ifBlock.generateJson(s);
+
+    s.append("\n]\n");
+    s.append("}");
+}
+
 void IfElseStatementNode::generateJson(string &s) {
     s.append("\n{\n");
     s.append("\"name\" : \"IfElseStatement\",\n");
@@ -766,6 +996,14 @@ void ReturnStatementNode::generateJson(string &s) {
     s.append("\"name\" : \"ReturnStatement\",\n");
     s.append("\"children\" : \n[");
     this->expression.generateJson(s);
+    s.append("\n]\n");
+    s.append("}");
+}
+
+void ReturnVoidNode::generateJson(string &s) {
+    s.append("\n{\n");
+    s.append("\"name\" : \"ReturnVoid\",\n");
+    s.append("\"children\" : \n[");
     s.append("\n]\n");
     s.append("}");
 }
