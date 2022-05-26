@@ -499,6 +499,7 @@ llvm::Value* ExpressionStatementNode::emitter(EmitContext &emitContext){
 }
 
 llvm::Value* BreakStatementNode::emitter(EmitContext &emitContext){
+    emitContext.hasReturn = true;
     return myBuilder.CreateBr(GlobalAfterBB.top());
 }
 
@@ -946,7 +947,7 @@ void ExpressionStatementNode::generateJson(string &s) {
 
 void BreakStatementNode::generateJson(string &s) {
     s.append("\n{\n");
-    s.append("\"name\" : break\n");
+    s.append("\"name\" : \"break\", \n");
     s.append("}");
 }
 
@@ -1007,6 +1008,7 @@ void ReturnVoidNode::generateJson(string &s) {
     s.append("\n]\n");
     s.append("}");
 }
+
 
 void VariableDeclarationNode::generateJson(string &s) {
     s.append("\n{\n");
