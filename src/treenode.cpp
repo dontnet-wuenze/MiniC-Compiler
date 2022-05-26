@@ -86,7 +86,34 @@ llvm::Value* FloatNode::emitter(EmitContext &emitContext){
 
 llvm::Value* CharNode::emitter(EmitContext &emitContext){  //----------  -_-
     cout << "CharNode : " << value <<endl;
-    return myBuilder.getInt8(this->value);
+    if (this->value.size() == 3)
+        return myBuilder.getInt8(this->value.at(1));
+    else {
+        if (this->value.compare("'\\n'") == 0) {
+            return myBuilder.getInt8('\n');
+        } else if (this->value.compare("'\\\\'") == 0){
+            return myBuilder.getInt8('\\');
+        } else if (this->value.compare("'\\a'") == 0){
+            return myBuilder.getInt8('\a');
+        } else if (this->value.compare("'\\b'") == 0){
+            return myBuilder.getInt8('\b');
+        } else if (this->value.compare("'\\f'") == 0){
+            return myBuilder.getInt8('\f');
+        } else if (this->value.compare("'\\t'") == 0){
+            return myBuilder.getInt8('\t');
+        } else if (this->value.compare("'\\v'") == 0){
+            return myBuilder.getInt8('\v');
+        } else if (this->value.compare("'\\''") == 0){
+            return myBuilder.getInt8('\'');
+        } else if (this->value.compare("'\\\"'") == 0){
+            return myBuilder.getInt8('\"');
+        } else if (this->value.compare("'\\0'") == 0){
+            return myBuilder.getInt8('\0');
+        } else {
+            throw logic_error("[ERROR] char not defined: " + this->value);
+        }
+    }
+    return nullptr;
 }
 
 // StringNode 返回值是首地址
@@ -388,10 +415,10 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
                 }
             }
         }
-        if(op == PLUS){bi_op = llvm::Instruction::Add;}
-        else if(op == MINUS){bi_op = llvm::Instruction::Sub;}
-        else if(op == MUL){bi_op = llvm::Instruction::Mul;}
-        else if(op == DIV){bi_op = llvm::Instruction::SDiv;}
+        if(op == PLUS){bi_op = left->getType()->isFloatTy() ? llvm::Instruction::FAdd : llvm::Instruction::Add;}
+        else if(op == MINUS){bi_op = left->getType()->isFloatTy() ? llvm::Instruction::FSub : llvm::Instruction::Sub;}
+        else if(op == MUL){bi_op = left->getType()->isFloatTy() ? llvm::Instruction::FMul : llvm::Instruction::Mul;}
+        else if(op == DIV){bi_op = left->getType()->isFloatTy() ? llvm::Instruction::FDiv : llvm::Instruction::SDiv;}
         return llvm::BinaryOperator::Create(bi_op,left,right,"", myBuilder.GetInsertBlock());
     }
     else if(op == AND){
@@ -775,7 +802,7 @@ void FloatNode::generateJson(string &s) {
 
 void CharNode::generateJson(string &s) {
     s.append("\n{\n");
-    s.append("\"name\" : \"CharValue: " + to_string(this->value) + "\"\n");
+    s.append("\"name\" : \"CharValue: " + this->value.substr(1, this->value.length() - 2) + "\"\n");
     s.append("}");
 }
 

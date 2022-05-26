@@ -8,6 +8,7 @@
 #include <cstring>
 #include <iostream>
 #include <llvm/IR/Value.h>
+#include <string>
 #include <vector>
 
 using namespace std;
@@ -61,11 +62,11 @@ public:
 
 class CharNode : public ExpressionNode {
 public:
-  CharNode(char value, int lineNo) : ExpressionNode(lineNo), value(value) {}
+  CharNode(string &value, int lineNo) : ExpressionNode(lineNo), value(value) {}
   llvm::Value *emitter(EmitContext &emitContext);
   void generateJson(string &s);
 public:
-  char value;
+  string &value;
 };
 
 class StringNode : public ExpressionNode {
