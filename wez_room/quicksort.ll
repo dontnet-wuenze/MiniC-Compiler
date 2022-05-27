@@ -4,147 +4,159 @@ source_filename = "main"
 @A = private global [200000 x i32] zeroinitializer
 @_Const_String_ = private constant [3 x i8] c"%d\00"
 @_Const_String_.1 = private constant [3 x i8] c"%d\00"
-@_Const_String_.2 = private constant [4 x i8] c"%d \00"
+@_Const_String_.2 = private constant [4 x i8] c"%d\0A\00"
 
 declare i32 @printf(i8*, ...)
 
 declare i32 @scanf(...)
 
-define void @quicksort(i32 %left1, i32 %right2) {
+define void @quicksort(i32* %A1, i32 %left2, i32 %right3) {
 entry:
+  %A = alloca i32*
+  store i32* %A1, i32** %A
   %left = alloca i32
-  store i32 %left1, i32* %left
+  store i32 %left2, i32* %left
   %right = alloca i32
-  store i32 %right2, i32* %right
+  store i32 %right3, i32* %right
   %i = alloca i32
   %j = alloca i32
   %x = alloca i32
   %y = alloca i32
   %LoadInst = load i32, i32* %left
   store i32 %LoadInst, i32* %i
-  %LoadInst3 = load i32, i32* %right
-  store i32 %LoadInst3, i32* %j
-  %LoadInst4 = load i32, i32* %left
-  %LoadInst5 = load i32, i32* %right
-  %0 = add i32 %LoadInst4, %LoadInst5
+  %LoadInst4 = load i32, i32* %right
+  store i32 %LoadInst4, i32* %j
+  %LoadInst5 = load i32, i32* %left
+  %LoadInst6 = load i32, i32* %right
+  %0 = add i32 %LoadInst5, %LoadInst6
   %1 = sdiv i32 %0, 2
-  %tmparray = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %1
+  %2 = load i32*, i32** %A
+  %tmparray = getelementptr inbounds i32, i32* %2, i32 %1
   %tmpvar = load i32, i32* %tmparray
   store i32 %tmpvar, i32* %x
   br label %cond
 
-return:                                           ; preds = %afterifonly53
+return:                                           ; preds = %afterifonly55
   ret void
 
 cond:                                             ; preds = %afterifonly, %entry
-  %LoadInst6 = load i32, i32* %i
-  %LoadInst7 = load i32, i32* %j
-  %icmptmp = icmp sle i32 %LoadInst6, %LoadInst7
+  %LoadInst7 = load i32, i32* %i
+  %LoadInst8 = load i32, i32* %j
+  %icmptmp = icmp sle i32 %LoadInst7, %LoadInst8
   %whileCond = icmp ne i1 %icmptmp, false
   br i1 %whileCond, label %loop, label %afterLoop
 
 loop:                                             ; preds = %cond
-  br label %cond8
+  br label %cond9
 
 afterLoop:                                        ; preds = %cond
-  %LoadInst46 = load i32, i32* %left
-  %LoadInst47 = load i32, i32* %j
-  %icmptmp48 = icmp slt i32 %LoadInst46, %LoadInst47
-  %ifCond49 = icmp ne i1 %icmptmp48, false
-  br i1 %ifCond49, label %if44, label %afterifonly45
+  %LoadInst47 = load i32, i32* %left
+  %LoadInst48 = load i32, i32* %j
+  %icmptmp49 = icmp slt i32 %LoadInst47, %LoadInst48
+  %ifCond50 = icmp ne i1 %icmptmp49, false
+  br i1 %ifCond50, label %if45, label %afterifonly46
 
-cond8:                                            ; preds = %loop9, %loop
-  %LoadInst11 = load i32, i32* %i
-  %tmparray12 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst11
-  %tmpvar13 = load i32, i32* %tmparray12
-  %LoadInst14 = load i32, i32* %x
-  %icmptmp15 = icmp slt i32 %tmpvar13, %LoadInst14
-  %whileCond16 = icmp ne i1 %icmptmp15, false
-  br i1 %whileCond16, label %loop9, label %afterLoop10
+cond9:                                            ; preds = %loop10, %loop
+  %LoadInst12 = load i32, i32* %i
+  %3 = load i32*, i32** %A
+  %tmparray13 = getelementptr inbounds i32, i32* %3, i32 %LoadInst12
+  %tmpvar14 = load i32, i32* %tmparray13
+  %LoadInst15 = load i32, i32* %x
+  %icmptmp16 = icmp slt i32 %tmpvar14, %LoadInst15
+  %whileCond17 = icmp ne i1 %icmptmp16, false
+  br i1 %whileCond17, label %loop10, label %afterLoop11
 
-loop9:                                            ; preds = %cond8
-  %LoadInst17 = load i32, i32* %i
-  %2 = add i32 %LoadInst17, 1
-  store i32 %2, i32* %i
-  br label %cond8
+loop10:                                           ; preds = %cond9
+  %LoadInst18 = load i32, i32* %i
+  %4 = add i32 %LoadInst18, 1
+  store i32 %4, i32* %i
+  br label %cond9
 
-afterLoop10:                                      ; preds = %cond8
-  br label %cond18
+afterLoop11:                                      ; preds = %cond9
+  br label %cond19
 
-cond18:                                           ; preds = %loop19, %afterLoop10
-  %LoadInst21 = load i32, i32* %x
-  %LoadInst22 = load i32, i32* %j
-  %tmparray23 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst22
-  %tmpvar24 = load i32, i32* %tmparray23
-  %icmptmp25 = icmp slt i32 %LoadInst21, %tmpvar24
-  %whileCond26 = icmp ne i1 %icmptmp25, false
-  br i1 %whileCond26, label %loop19, label %afterLoop20
+cond19:                                           ; preds = %loop20, %afterLoop11
+  %LoadInst22 = load i32, i32* %x
+  %LoadInst23 = load i32, i32* %j
+  %5 = load i32*, i32** %A
+  %tmparray24 = getelementptr inbounds i32, i32* %5, i32 %LoadInst23
+  %tmpvar25 = load i32, i32* %tmparray24
+  %icmptmp26 = icmp slt i32 %LoadInst22, %tmpvar25
+  %whileCond27 = icmp ne i1 %icmptmp26, false
+  br i1 %whileCond27, label %loop20, label %afterLoop21
 
-loop19:                                           ; preds = %cond18
-  %LoadInst27 = load i32, i32* %j
-  %3 = sub i32 %LoadInst27, 1
-  store i32 %3, i32* %j
-  br label %cond18
+loop20:                                           ; preds = %cond19
+  %LoadInst28 = load i32, i32* %j
+  %6 = sub i32 %LoadInst28, 1
+  store i32 %6, i32* %j
+  br label %cond19
 
-afterLoop20:                                      ; preds = %cond18
-  %LoadInst28 = load i32, i32* %i
-  %LoadInst29 = load i32, i32* %j
-  %icmptmp30 = icmp sle i32 %LoadInst28, %LoadInst29
-  %ifCond = icmp ne i1 %icmptmp30, false
+afterLoop21:                                      ; preds = %cond19
+  %LoadInst29 = load i32, i32* %i
+  %LoadInst30 = load i32, i32* %j
+  %icmptmp31 = icmp sle i32 %LoadInst29, %LoadInst30
+  %ifCond = icmp ne i1 %icmptmp31, false
   br i1 %ifCond, label %if, label %afterifonly
 
-if:                                               ; preds = %afterLoop20
-  %LoadInst31 = load i32, i32* %i
-  %tmparray32 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst31
-  %tmpvar33 = load i32, i32* %tmparray32
-  store i32 %tmpvar33, i32* %y
-  %LoadInst34 = load i32, i32* %i
-  %tmpvar35 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst34
-  %LoadInst36 = load i32, i32* %j
-  %tmparray37 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst36
-  %tmpvar38 = load i32, i32* %tmparray37
-  store i32 %tmpvar38, i32* %tmpvar35
-  %LoadInst39 = load i32, i32* %j
-  %tmpvar40 = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst39
-  %LoadInst41 = load i32, i32* %y
-  store i32 %LoadInst41, i32* %tmpvar40
-  %LoadInst42 = load i32, i32* %i
-  %4 = add i32 %LoadInst42, 1
-  store i32 %4, i32* %i
-  %LoadInst43 = load i32, i32* %j
-  %5 = sub i32 %LoadInst43, 1
-  store i32 %5, i32* %j
+if:                                               ; preds = %afterLoop21
+  %LoadInst32 = load i32, i32* %i
+  %7 = load i32*, i32** %A
+  %tmparray33 = getelementptr inbounds i32, i32* %7, i32 %LoadInst32
+  %tmpvar34 = load i32, i32* %tmparray33
+  store i32 %tmpvar34, i32* %y
+  %LoadInst35 = load i32, i32* %i
+  %8 = load i32*, i32** %A
+  %tmpvar36 = getelementptr inbounds i32, i32* %8, i32 %LoadInst35
+  %LoadInst37 = load i32, i32* %j
+  %9 = load i32*, i32** %A
+  %tmparray38 = getelementptr inbounds i32, i32* %9, i32 %LoadInst37
+  %tmpvar39 = load i32, i32* %tmparray38
+  store i32 %tmpvar39, i32* %tmpvar36
+  %LoadInst40 = load i32, i32* %j
+  %10 = load i32*, i32** %A
+  %tmpvar41 = getelementptr inbounds i32, i32* %10, i32 %LoadInst40
+  %LoadInst42 = load i32, i32* %y
+  store i32 %LoadInst42, i32* %tmpvar41
+  %LoadInst43 = load i32, i32* %i
+  %11 = add i32 %LoadInst43, 1
+  store i32 %11, i32* %i
+  %LoadInst44 = load i32, i32* %j
+  %12 = sub i32 %LoadInst44, 1
+  store i32 %12, i32* %j
   br label %afterifonly
 
-afterifonly:                                      ; preds = %if, %afterLoop20
+afterifonly:                                      ; preds = %if, %afterLoop21
   br label %cond
 
-if44:                                             ; preds = %afterLoop
-  %LoadInst50 = load i32, i32* %left
-  %LoadInst51 = load i32, i32* %j
-  call void @quicksort(i32 %LoadInst50, i32 %LoadInst51)
-  br label %afterifonly45
+if45:                                             ; preds = %afterLoop
+  %LoadInst51 = load i32*, i32** %A
+  %LoadInst52 = load i32, i32* %left
+  %LoadInst53 = load i32, i32* %j
+  call void @quicksort(i32* %LoadInst51, i32 %LoadInst52, i32 %LoadInst53)
+  br label %afterifonly46
 
-afterifonly45:                                    ; preds = %if44, %afterLoop
-  %LoadInst54 = load i32, i32* %i
-  %LoadInst55 = load i32, i32* %right
-  %icmptmp56 = icmp slt i32 %LoadInst54, %LoadInst55
-  %ifCond57 = icmp ne i1 %icmptmp56, false
-  br i1 %ifCond57, label %if52, label %afterifonly53
+afterifonly46:                                    ; preds = %if45, %afterLoop
+  %LoadInst56 = load i32, i32* %i
+  %LoadInst57 = load i32, i32* %right
+  %icmptmp58 = icmp slt i32 %LoadInst56, %LoadInst57
+  %ifCond59 = icmp ne i1 %icmptmp58, false
+  br i1 %ifCond59, label %if54, label %afterifonly55
 
-if52:                                             ; preds = %afterifonly45
-  %LoadInst58 = load i32, i32* %i
-  %LoadInst59 = load i32, i32* %right
-  call void @quicksort(i32 %LoadInst58, i32 %LoadInst59)
-  br label %afterifonly53
+if54:                                             ; preds = %afterifonly46
+  %LoadInst60 = load i32*, i32** %A
+  %LoadInst61 = load i32, i32* %i
+  %LoadInst62 = load i32, i32* %right
+  call void @quicksort(i32* %LoadInst60, i32 %LoadInst61, i32 %LoadInst62)
+  br label %afterifonly55
 
-afterifonly53:                                    ; preds = %if52, %afterifonly45
+afterifonly55:                                    ; preds = %if54, %afterifonly46
   br label %return
 }
 
 define i32 @main() {
 entry:
   %0 = alloca i32
+  %B = alloca [10 x i32]
   %N = alloca i32
   %scanf = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_, i32 0, i32 0), i32* %N)
   %i = alloca i32
@@ -164,7 +176,7 @@ cond:                                             ; preds = %loop, %entry
 
 loop:                                             ; preds = %cond
   %LoadInst2 = load i32, i32* %i
-  %elePtr = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst2
+  %elePtr = getelementptr inbounds [10 x i32], [10 x i32]* %B, i32 0, i32 %LoadInst2
   %scanf3 = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_.1, i32 0, i32 0), i32* %elePtr)
   %LoadInst4 = load i32, i32* %i
   %2 = add i32 %LoadInst4, 1
@@ -178,9 +190,10 @@ afterLoop:                                        ; preds = %cond
   %LoadInst5 = load i32, i32* %N
   %3 = sub i32 %LoadInst5, 1
   store i32 %3, i32* %right
+  %arrayPtr = getelementptr inbounds [10 x i32], [10 x i32]* %B, i32 0, i32 0
   %LoadInst6 = load i32, i32* %left
   %LoadInst7 = load i32, i32* %right
-  call void @quicksort(i32 %LoadInst6, i32 %LoadInst7)
+  call void @quicksort(i32* %arrayPtr, i32 %LoadInst6, i32 %LoadInst7)
   store i32 0, i32* %i
   br label %cond8
 
@@ -193,7 +206,7 @@ cond8:                                            ; preds = %loop9, %afterLoop
 
 loop9:                                            ; preds = %cond8
   %LoadInst15 = load i32, i32* %i
-  %tmparray = getelementptr inbounds [200000 x i32], [200000 x i32]* @A, i32 0, i32 %LoadInst15
+  %tmparray = getelementptr inbounds [10 x i32], [10 x i32]* %B, i32 0, i32 %LoadInst15
   %tmpvar = load i32, i32* %tmparray
   %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @_Const_String_.2, i32 0, i32 0), i32 %tmpvar)
   %LoadInst16 = load i32, i32* %i

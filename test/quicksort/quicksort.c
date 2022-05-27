@@ -49,7 +49,7 @@ int main()
     quicksort(B, left, right);
     i = 0;
     while(i < N) {
-        printf("%d ", B[i]);
+        printf("%d\n", B[i]);
         i = i + 1;
     }
     
