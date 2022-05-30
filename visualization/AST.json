@@ -8,22 +8,10 @@
 "children" : 
 [
 {
-"name" : "Identifier: char"
+"name" : "Identifier: int"
 },
 {
-"name" : "Identifier: course_info"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: char"
-},
-{
-"name" : "Identifier: pre_course"
+"name" : "Identifier: A"
 }
 ]
 },
@@ -35,7 +23,7 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: pass_course"
+"name" : "Identifier: B"
 }
 ]
 },
@@ -47,7 +35,19 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: course_id"
+"name" : "Identifier: C"
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: char"
+},
+{
+"name" : "Identifier: input"
 }
 ]
 },
@@ -73,10 +73,7 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: total_credit"
-},
-{
-"name" : "IntValue: 0"
+"name" : "Identifier: A_M"
 }
 ]
 },
@@ -85,10 +82,100 @@
 "children" : 
 [
 {
-"name" : "Identifier: float"
+"name" : "Identifier: int"
 },
 {
-"name" : "Identifier: total_gpa"
+"name" : "Identifier: A_N"
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: B_M"
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: B_N"
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "FunctionCall",
+"children" : 
+[
+{
+"name" : "Identifier: gets"
+},
+{
+"name" : "Identifier: input"
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "FunctionCall",
+"children" : 
+[
+{
+"name" : "Identifier: scanf"
+},
+{
+"name" : "StringValue: %d %d"
+},
+{
+"name" : "getAddr",
+"children" : 
+[
+{
+"name" : "Identifier: A_M"
+}
+]
+},
+{
+"name" : "getAddr",
+"children" : 
+[
+{
+"name" : "Identifier: A_N"
+}
+]
+}
+]
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: i"
 },
 {
 "name" : "IntValue: 0"
@@ -103,37 +190,7 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: course_num"
+"name" : "Identifier: j"
 },
 {
 "name" : "IntValue: 0"
@@ -145,7 +202,60 @@
 "children" : 
 [
 {
-"name" : "IntValue: 1"
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "<"
+},
+{
+"name" : "Identifier: A_M"
+}
+]
+},
+{
+"name" : "Block",
+"children" : 
+[
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: j"
+},
+{
+"name" : "IntValue: 0"
+}
+]
+}
+]
+},
+{
+"name" : "WhileStatement",
+"children" : 
+[
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: j"
+},
+{
+"name" : "<"
+},
+{
+"name" : "Identifier: A_N"
+}
+]
 },
 {
 "name" : "Block",
@@ -163,82 +273,43 @@
 "name" : "Identifier: scanf"
 },
 {
-"name" : "StringValue: %s"
+"name" : "StringValue: %d"
 },
 {
 "name" : "getArrayAddr",
 "children" : 
 [
 {
-"name" : "Identifier: course_info"
+"name" : "Identifier: A"
 },
 {
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: course_num"
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: i"
 },
 {
 "name" : "*"
 },
 {
-"name" : "IntValue: 1000"
-}
-]
-}
-]
-}
-]
+"name" : "Identifier: A_N"
 }
 ]
 },
 {
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
+"name" : "+"
 },
 {
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: course_num"
-},
-{
-"name" : "*"
-},
-{
-"name" : "IntValue: 1000"
+"name" : "Identifier: j"
 }
 ]
 }
 ]
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: e"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "break", 
 }
 ]
 }
@@ -253,14 +324,14 @@
 "children" : 
 [
 {
-"name" : "Identifier: course_num"
+"name" : "Identifier: j"
 },
 {
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: course_num"
+"name" : "Identifier: j"
 },
 {
 "name" : "+"
@@ -279,17 +350,126 @@
 ]
 },
 {
-"name" : "VariableDeclaration",
+"name" : "ExpressionStatement",
 "children" : 
 [
 {
-"name" : "Identifier: int"
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: i"
 },
 {
-"name" : "Identifier: course"
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "+"
+},
+{
+"name" : "IntValue: 1"
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "FunctionCall",
+"children" : 
+[
+{
+"name" : "Identifier: gets"
+},
+{
+"name" : "Identifier: input"
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "FunctionCall",
+"children" : 
+[
+{
+"name" : "Identifier: scanf"
+},
+{
+"name" : "StringValue: %d %d"
+},
+{
+"name" : "getAddr",
+"children" : 
+[
+{
+"name" : "Identifier: B_M"
+}
+]
+},
+{
+"name" : "getAddr",
+"children" : 
+[
+{
+"name" : "Identifier: B_N"
+}
+]
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: i"
 },
 {
 "name" : "IntValue: 0"
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: j"
+},
+{
+"name" : "IntValue: 0"
+}
+]
 }
 ]
 },
@@ -302,13 +482,13 @@
 "children" : 
 [
 {
-"name" : "Identifier: course"
+"name" : "Identifier: i"
 },
 {
 "name" : "<"
 },
 {
-"name" : "Identifier: course_num"
+"name" : "Identifier: B_M"
 }
 ]
 },
@@ -317,54 +497,18 @@
 "children" : 
 [
 {
-"name" : "VariableDeclaration",
+"name" : "ExpressionStatement",
 "children" : 
 [
 {
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: idx"
-},
-{
-"name" : "BinaryOperation",
+"name" : "Assignment",
 "children" : 
 [
 {
-"name" : "Identifier: course"
+"name" : "Identifier: j"
 },
 {
-"name" : "*"
-},
-{
-"name" : "IntValue: 1000"
-}
-]
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: course"
-},
-{
-"name" : "*"
-},
-{
-"name" : "IntValue: 1000"
+"name" : "IntValue: 0"
 }
 ]
 }
@@ -379,54 +523,13 @@
 "children" : 
 [
 {
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
+"name" : "Identifier: j"
 },
 {
-"name" : "Identifier: idx"
-}
-]
+"name" : "<"
 },
 {
-"name" : "!="
-},
-{
-"name" : "CharValue: |"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
-},
-{
-"name" : "Identifier: idx"
-}
-]
-},
-{
-"name" : "!="
-},
-{
-"name" : "CharValue: c"
+"name" : "Identifier: B_N"
 }
 ]
 },
@@ -439,14 +542,21 @@
 "children" : 
 [
 {
-"name" : "ArrayElementAssign",
+"name" : "FunctionCall",
 "children" : 
 [
 {
-"name" : "Identifier: course_id"
+"name" : "Identifier: scanf"
 },
 {
-"name" : "Identifier: course"
+"name" : "StringValue: %d"
+},
+{
+"name" : "getArrayAddr",
+"children" : 
+[
+{
+"name" : "Identifier: B"
 },
 {
 "name" : "BinaryOperation",
@@ -457,26 +567,13 @@
 "children" : 
 [
 {
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_id"
-},
-{
-"name" : "Identifier: course"
-}
-]
+"name" : "Identifier: i"
 },
 {
 "name" : "*"
 },
 {
-"name" : "IntValue: 10"
+"name" : "Identifier: B_N"
 }
 ]
 },
@@ -484,26 +581,7 @@
 "name" : "+"
 },
 {
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
-},
-{
-"name" : "Identifier: idx"
-}
-]
-}
-]
-},
-{
-"name" : "-"
-},
-{
-"name" : "CharValue: 0"
-}
-]
+"name" : "Identifier: j"
 }
 ]
 }
@@ -522,14 +600,14 @@
 "children" : 
 [
 {
-"name" : "Identifier: idx"
+"name" : "Identifier: j"
 },
 {
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: idx"
+"name" : "Identifier: j"
 },
 {
 "name" : "+"
@@ -556,14 +634,14 @@
 "children" : 
 [
 {
-"name" : "Identifier: idx"
+"name" : "Identifier: i"
 },
 {
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: idx"
+"name" : "Identifier: i"
 },
 {
 "name" : "+"
@@ -576,135 +654,13 @@
 ]
 }
 ]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
-},
-{
-"name" : "Identifier: idx"
-}
-]
-},
-{
-"name" : "-"
-},
-{
-"name" : "CharValue: 0"
 }
 ]
 }
 ]
 },
 {
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: total_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: total_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: idx"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: idx"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: idx"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: idx"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "WhileStatement",
+"name" : "IfOnlyStatement",
 "children" : 
 [
 {
@@ -712,1097 +668,13 @@
 "children" : 
 [
 {
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
-},
-{
-"name" : "Identifier: idx"
-}
-]
+"name" : "Identifier: A_N"
 },
 {
 "name" : "!="
 },
 {
-"name" : "CharValue: |"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: pre_course"
-},
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
-},
-{
-"name" : "Identifier: idx"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: idx"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: idx"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: pre_course"
-},
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "CharValue: \0"
-}
-]
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: char"
-},
-{
-"name" : "Identifier: grade"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: idx"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: grade"
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: A"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "+"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: credit"
-},
-{
-"name" : "*"
-},
-{
-"name" : "IntValue: 4"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: pass_course"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_id"
-},
-{
-"name" : "Identifier: course"
-}
-]
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: grade"
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: B"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "+"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: credit"
-},
-{
-"name" : "*"
-},
-{
-"name" : "IntValue: 3"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: pass_course"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_id"
-},
-{
-"name" : "Identifier: course"
-}
-]
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: grade"
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: C"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "+"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: credit"
-},
-{
-"name" : "*"
-},
-{
-"name" : "IntValue: 2"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: pass_course"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_id"
-},
-{
-"name" : "Identifier: course"
-}
-]
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: grade"
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: D"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: pass_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "ArrayElementAssign",
-"children" : 
-[
-{
-"name" : "Identifier: pass_course"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_id"
-},
-{
-"name" : "Identifier: course"
-}
-]
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: grade"
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: F"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "+"
-},
-{
-"name" : "Identifier: credit"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: course"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: course"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: try_credit"
-},
-{
-"name" : "!="
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: total_gpa"
-},
-{
-"name" : "/"
-},
-{
-"name" : "Identifier: try_credit"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: printf"
-},
-{
-"name" : "StringValue: GPA: %.1f\n"
-},
-{
-"name" : "Identifier: total_gpa"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: printf"
-},
-{
-"name" : "StringValue: Hours Attempted: %d\n"
-},
-{
-"name" : "Identifier: try_credit"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: printf"
-},
-{
-"name" : "StringValue: Hours Completed: %d\n"
-},
-{
-"name" : "Identifier: pass_credit"
-}
-]
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: course_remain"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: total_credit"
-},
-{
-"name" : "-"
-},
-{
-"name" : "Identifier: pass_credit"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: printf"
-},
-{
-"name" : "StringValue: Credits Remaining: %d\n"
-},
-{
-"name" : "Identifier: course_remain"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: printf"
-},
-{
-"name" : "StringValue: Possible Courses to Take Next\n"
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: course_remain"
-},
-{
-"name" : "=="
-},
-{
-"name" : "IntValue: 0"
+"name" : "Identifier: B_M"
 }
 ]
 },
@@ -1822,7 +694,7 @@
 "name" : "Identifier: printf"
 },
 {
-"name" : "StringValue:   None - Congratulations!\n"
+"name" : "StringValue: Incompatible Dimensions\n"
 }
 ]
 }
@@ -1850,7 +722,25 @@
 "children" : 
 [
 {
-"name" : "Identifier: course"
+"name" : "Identifier: i"
+},
+{
+"name" : "IntValue: 0"
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: j"
 },
 {
 "name" : "IntValue: 0"
@@ -1868,113 +758,13 @@
 "children" : 
 [
 {
-"name" : "Identifier: course"
+"name" : "Identifier: i"
 },
 {
 "name" : "<"
 },
 {
-"name" : "Identifier: course_num"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pass_course"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_id"
-},
-{
-"name" : "Identifier: course"
-}
-]
-}
-]
-},
-{
-"name" : "=="
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: can"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "IfElseStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pre_course"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: course"
-},
-{
-"name" : "*"
-},
-{
-"name" : "IntValue: 1000"
-}
-]
-}
-]
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: \0"
+"name" : "Identifier: A_M"
 }
 ]
 },
@@ -1991,73 +781,10 @@
 "children" : 
 [
 {
-"name" : "Identifier: can"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: cid"
+"name" : "Identifier: j"
 },
 {
 "name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: flag"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-},
-{
-"name" : "VariableDeclaration",
-"children" : 
-[
-{
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: course"
-},
-{
-"name" : "*"
-},
-{
-"name" : "IntValue: 1000"
 }
 ]
 }
@@ -2068,69 +795,17 @@
 "children" : 
 [
 {
-"name" : "IntValue: 1"
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pre_course"
+"name" : "Identifier: j"
 },
 {
-"name" : "Identifier: preidx"
-}
-]
+"name" : "<"
 },
 {
-"name" : "=="
-},
-{
-"name" : "CharValue: \0"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pass_course"
-},
-{
-"name" : "Identifier: cid"
-}
-]
-},
-{
-"name" : "=="
-},
-{
-"name" : "IntValue: 0"
+"name" : "Identifier: B_N"
 }
 ]
 },
@@ -2143,456 +818,11 @@
 "children" : 
 [
 {
-"name" : "Assignment",
+"name" : "ArrayElementAssign",
 "children" : 
 [
 {
-"name" : "Identifier: flag"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: flag"
-},
-{
-"name" : "=="
-},
-{
-"name" : "IntValue: 1"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: can"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "break", 
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pre_course"
-},
-{
-"name" : "Identifier: preidx"
-}
-]
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: ;"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pass_course"
-},
-{
-"name" : "Identifier: cid"
-}
-]
-},
-{
-"name" : "=="
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: flag"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: flag"
-},
-{
-"name" : "=="
-},
-{
-"name" : "IntValue: 1"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: can"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: cid"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: flag"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pre_course"
-},
-{
-"name" : "Identifier: preidx"
-}
-]
-},
-{
-"name" : "=="
-},
-{
-"name" : "CharValue: ,"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pass_course"
-},
-{
-"name" : "Identifier: cid"
-}
-]
-},
-{
-"name" : "=="
-},
-{
-"name" : "IntValue: 0"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: flag"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: cid"
-},
-{
-"name" : "IntValue: 0"
-}
-]
-}
-]
-},
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: preidx"
-},
-{
-"name" : "+"
-},
-{
-"name" : "IntValue: 1"
-}
-]
-}
-]
-}
-]
-}
-]
-}
-]
-},
-{
-"name" : "IfOnlyStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: pre_course"
-},
-{
-"name" : "Identifier: preidx"
-}
-]
-},
-{
-"name" : "!="
-},
-{
-"name" : "CharValue: c"
-}
-]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "Assignment",
-"children" : 
-[
-{
-"name" : "Identifier: cid"
+"name" : "Identifier: C"
 },
 {
 "name" : "BinaryOperation",
@@ -2603,17 +833,13 @@
 "children" : 
 [
 {
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "Identifier: cid"
+"name" : "Identifier: i"
 },
 {
 "name" : "*"
 },
 {
-"name" : "IntValue: 10"
+"name" : "Identifier: B_N"
 }
 ]
 },
@@ -2621,24 +847,212 @@
 "name" : "+"
 },
 {
+"name" : "Identifier: j"
+}
+]
+},
+{
+"name" : "IntValue: 0"
+}
+]
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: k"
+},
+{
+"name" : "IntValue: 0"
+}
+]
+},
+{
+"name" : "WhileStatement",
+"children" : 
+[
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: k"
+},
+{
+"name" : "<"
+},
+{
+"name" : "Identifier: A_N"
+}
+]
+},
+{
+"name" : "Block",
+"children" : 
+[
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "ArrayElementAssign",
+"children" : 
+[
+{
+"name" : "Identifier: C"
+},
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "*"
+},
+{
+"name" : "Identifier: B_N"
+}
+]
+},
+{
+"name" : "+"
+},
+{
+"name" : "Identifier: j"
+}
+]
+},
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
 "name" : "ArrayElement",
 "children" : 
 [
 {
-"name" : "Identifier: pre_course"
+"name" : "Identifier: C"
 },
 {
-"name" : "Identifier: preidx"
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "*"
+},
+{
+"name" : "Identifier: B_N"
+}
+]
+},
+{
+"name" : "+"
+},
+{
+"name" : "Identifier: j"
 }
 ]
 }
 ]
 },
 {
-"name" : "-"
+"name" : "+"
 },
 {
-"name" : "CharValue: 0"
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "ArrayElement",
+"children" : 
+[
+{
+"name" : "Identifier: A"
+},
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "*"
+},
+{
+"name" : "Identifier: A_N"
+}
+]
+},
+{
+"name" : "+"
+},
+{
+"name" : "Identifier: k"
+}
+]
+}
+]
+},
+{
+"name" : "*"
+},
+{
+"name" : "ArrayElement",
+"children" : 
+[
+{
+"name" : "Identifier: B"
+},
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: k"
+},
+{
+"name" : "*"
+},
+{
+"name" : "Identifier: B_N"
+}
+]
+},
+{
+"name" : "+"
+},
+{
+"name" : "Identifier: j"
+}
+]
 }
 ]
 }
@@ -2659,14 +1073,14 @@
 "children" : 
 [
 {
-"name" : "Identifier: preidx"
+"name" : "Identifier: k"
 },
 {
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: preidx"
+"name" : "Identifier: k"
 },
 {
 "name" : "+"
@@ -2683,13 +1097,95 @@
 ]
 }
 ]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: j"
+},
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: j"
+},
+{
+"name" : "+"
+},
+{
+"name" : "IntValue: 1"
+}
+]
+}
+]
+}
+]
 }
 ]
 }
 ]
 },
 {
-"name" : "IfOnlyStatement",
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "+"
+},
+{
+"name" : "IntValue: 1"
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: i"
+},
+{
+"name" : "IntValue: 0"
+}
+]
+}
+]
+},
+{
+"name" : "WhileStatement",
 "children" : 
 [
 {
@@ -2697,13 +1193,54 @@
 "children" : 
 [
 {
-"name" : "Identifier: can"
+"name" : "Identifier: i"
 },
 {
-"name" : "=="
+"name" : "<"
 },
 {
-"name" : "IntValue: 1"
+"name" : "Identifier: A_M"
+}
+]
+},
+{
+"name" : "Block",
+"children" : 
+[
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "Assignment",
+"children" : 
+[
+{
+"name" : "Identifier: j"
+},
+{
+"name" : "IntValue: 0"
+}
+]
+}
+]
+},
+{
+"name" : "WhileStatement",
+"children" : 
+[
+{
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: j"
+},
+{
+"name" : "<"
+},
+{
+"name" : "Identifier: B_N"
 }
 ]
 },
@@ -2723,94 +1260,41 @@
 "name" : "Identifier: printf"
 },
 {
-"name" : "StringValue:   "
-}
-]
-}
-]
+"name" : "StringValue: %10d "
 },
 {
-"name" : "VariableDeclaration",
+"name" : "ArrayElement",
 "children" : 
 [
 {
-"name" : "Identifier: int"
-},
-{
-"name" : "Identifier: course_idx"
+"name" : "Identifier: C"
 },
 {
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: course"
+"name" : "BinaryOperation",
+"children" : 
+[
+{
+"name" : "Identifier: i"
 },
 {
 "name" : "*"
 },
 {
-"name" : "IntValue: 1000"
-}
-]
-}
-]
-},
-{
-"name" : "WhileStatement",
-"children" : 
-[
-{
-"name" : "BinaryOperation",
-"children" : 
-[
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
-},
-{
-"name" : "Identifier: course_idx"
+"name" : "Identifier: B_N"
 }
 ]
 },
 {
-"name" : "!="
+"name" : "+"
 },
 {
-"name" : "CharValue: |"
+"name" : "Identifier: j"
 }
 ]
-},
-{
-"name" : "Block",
-"children" : 
-[
-{
-"name" : "ExpressionStatement",
-"children" : 
-[
-{
-"name" : "FunctionCall",
-"children" : 
-[
-{
-"name" : "Identifier: printf"
-},
-{
-"name" : "StringValue: %c"
-},
-{
-"name" : "ArrayElement",
-"children" : 
-[
-{
-"name" : "Identifier: course_info"
-},
-{
-"name" : "Identifier: course_idx"
 }
 ]
 }
@@ -2827,14 +1311,14 @@
 "children" : 
 [
 {
-"name" : "Identifier: course_idx"
+"name" : "Identifier: j"
 },
 {
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: course_idx"
+"name" : "Identifier: j"
 },
 {
 "name" : "+"
@@ -2869,14 +1353,6 @@
 ]
 }
 ]
-}
-]
-}
-]
-}
-]
-}
-]
 },
 {
 "name" : "ExpressionStatement",
@@ -2887,14 +1363,14 @@
 "children" : 
 [
 {
-"name" : "Identifier: course"
+"name" : "Identifier: i"
 },
 {
 "name" : "BinaryOperation",
 "children" : 
 [
 {
-"name" : "Identifier: course"
+"name" : "Identifier: i"
 },
 {
 "name" : "+"

@@ -4,12 +4,16 @@ int A[200000];
 int B[200000];
 int C[200000];
 
+char input[100000];
+
 int main() {
     int A_M;
     int A_N;
     int B_M;
     int B_N;
-    scanf("%d %d", &A_M, &A_N);
+    //scanf("%s", input);
+    //scanf("%s", input);
+    scanf("%d %d\n", &A_M, &A_N);
     int i = 0;
     int j = 0;
     while(i < A_M) {
@@ -21,6 +25,8 @@ int main() {
         i = i + 1;
     }
 
+    //scanf("%s", input);
+    //scanf("%s", input);
     scanf("%d %d", &B_M, &B_N);
     i = 0;
     j = 0;
@@ -58,7 +64,7 @@ int main() {
     while(i < A_M) {
         j = 0;
         while(j < B_N) {
-            printf("%d ", C[i * B_N + j]);
+            printf("%10d", C[i * B_N + j]);
             j = j + 1;
         }
         printf("\n");

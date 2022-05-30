@@ -345,6 +345,15 @@ vector<llvm::Value *> *getScanfArgs(EmitContext &emitContext,vector<ExpressionNo
     return scanf_args;
 }
 
+vector<llvm::Value *> *getGetsArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
+    vector<llvm::Value *> *gets_args = new vector<llvm::Value *>;
+    for(auto it: args){
+        llvm::Value* tmp = it->emitter(emitContext);
+        gets_args->push_back(tmp);
+    }
+    return gets_args;
+}
+
 vector<llvm::Value *> *getScanfArgsAddr(EmitContext &emitContext,vector<ExpressionNode*>args){
     vector<llvm::Value *> *scanf_args = new vector<llvm::Value *>;
     for(auto it: args){
@@ -366,11 +375,19 @@ llvm:: Value* emitScanf(EmitContext &emitContext,vector<ExpressionNode*> args){
     return myBuilder.CreateCall(emitContext.scanf, *scanf_args, "scanf");
 }
 
+llvm:: Value* emitGets(EmitContext &emitContext,vector<ExpressionNode*> args){
+    //vector<llvm::Value *> *scanf_args = getScanfArgsAddr(emitContext, args);    
+    vector<llvm::Value *> *gets_args = getGetsArgs(emitContext, args);    
+    return myBuilder.CreateCall(emitContext.gets, *gets_args, "gets");
+}
+
 llvm::Value* FunctionCallNode::emitter(EmitContext &emitContext){
-    if(identifier.name == "printf"){ //若调用printf函数
+    if(identifier.name == "printf"){ //若调用 printf 函数
         return emitPrintf(emitContext, args);
-    } else if(identifier.name == "scanf"){ //若调用scanf函数
+    } else if(identifier.name == "scanf"){ //若调用 scanf 函数
         return emitScanf(emitContext, args);
+    } else if(identifier.name == "gets") { // 若调用 gets 函数
+        return emitGets(emitContext, args);
     }
 
     //在module中查找以identifier命名的函数
