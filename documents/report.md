@@ -52,9 +52,9 @@ user's code
 目前为止，我们的语言支持的 tokens 有：
 
 - `int`, `float`, `char`
-- `*`(乘法，不支持指针), `/`, `+`, `-`
+- `*`, `/`, `+`, `-`
 - `=`
-- `==`, `<=`, `>=`, `<`, `>`, `&&`, `||`, `!`
+- `==`, `<=`, `>=`, `<`, `>`, `&&`, `||`, `!`, `&`(取地址符)
 - C 语言的基本语句分隔符，如 `()`, `[]`, `{}`, `;`
 - `if`, `else`, `while`, `break`, `return`
 
@@ -62,7 +62,8 @@ user's code
 
 我们选择根据我们设计的语言，对 [ANSI C grammar, Lex specification](http://www.lysator.liu.se/c/ANSI-C-grammar-l.html) 进行精简，得到我们的 token.l 文件。
 
-TODO: 可以把最后精简后的代码贴到这里
+![token1](report.assets/token1.png)
+![token2](report.assets/token2.png)
 
 ## 语法分析 -- Yacc (Bison)
 
@@ -226,35 +227,39 @@ extern llvm::IRBuilder<> myBuilder; //定义全局IRbuilder
 
 
 
-basic_block类主要存储一个llvm:：BasicBlock，返回值return_value以及块内的变量表local_var及对应的变量-llvm类型表local_var_type；
+我们需要一个symbolTable类作为符号表存储块内的变量表 local_var 及对应的变量-llvm 类型表 local_var_type；
 
 ```c++
-class basic_block{ 
+class symbolTable{ 
 public:
-    llvm::BasicBlock *block;
-    llvm::Value* return_value;
-    map<string, llvm::Value*> local_var; //局部变量map
-    map<string, llvm::Type*> local_var_type;//局部变量string-llvm::type的map
+    map<string, llvm::Value*> local_var; //局部变量 map
+    map<string, llvm::Type*> local_var_type;//局部变量 string-llvm::type 的 map
 };
 ```
 
 
 
-EmitContext类主要存储了一个basic_block栈，同时存有LLVM::module以及所定义的输入输出函数；
+EmitContext类主要存储了一个符号栈，同时存有 LLVM::module 以及所定义的输入输出函数；
 
 ```c++
 class EmitContext{
 public:
-    stack<basic_block *> block_stack; //llvm::block栈
+    vector<symbolTable *> symbolTable_stack; //符号栈
+
 public:
     llvm::Module *myModule; 
-    llvm::Function *printf,*scanf;
+    llvm::Function *printf,*scanf, *gets;
+    llvm::Function* currentFunc;
+    llvm::BasicBlock* returnBB;
+    llvm::Value* returnVal;
+    bool isArgs;
+    bool hasReturn;
     ……
 ```
 
 
 
-表示整形、浮点型、字符常量的节点emitter函数：传入全局上下文myContext，分别返回了其对应的LLVM::constant种类；
+表示整形、浮点型、字符常量，和字符串常量的节点emitter函数：传入全局上下文myContext，分别返回了其对应的LLVM::constant种类；
 
 ```c++
 llvm::Value* IntNode::emitter(EmitContext &emitContext){
@@ -269,52 +274,139 @@ llvm::Value* FloatNode::emitter(EmitContext &emitContext){
 
 llvm::Value* CharNode::emitter(EmitContext &emitContext){  //----------  -_-
     cout << "CharNode : " << value <<endl;
-    return myBuilder.getInt8(this->value);
+    if (this->value.size() == 3)
+        return myBuilder.getInt8(this->value.at(1));
+    else {
+        if (this->value.compare("'\\n'") == 0) {
+            return myBuilder.getInt8('\n');
+        } else if (this->value.compare("'\\\\'") == 0){
+            return myBuilder.getInt8('\\');
+        } else if (this->value.compare("'\\a'") == 0){
+            return myBuilder.getInt8('\a');
+        } else if (this->value.compare("'\\b'") == 0){
+            return myBuilder.getInt8('\b');
+        } else if (this->value.compare("'\\f'") == 0){
+            return myBuilder.getInt8('\f');
+        } else if (this->value.compare("'\\t'") == 0){
+            return myBuilder.getInt8('\t');
+        } else if (this->value.compare("'\\v'") == 0){
+            return myBuilder.getInt8('\v');
+        } else if (this->value.compare("'\\''") == 0){
+            return myBuilder.getInt8('\'');
+        } else if (this->value.compare("'\\\"'") == 0){
+            return myBuilder.getInt8('\"');
+        } else if (this->value.compare("'\\0'") == 0){
+            return myBuilder.getInt8('\0');
+        } else {
+            throw logic_error("[ERROR] char not defined: " + this->value);
+        }
+    }
+    return nullptr;
+}
+
+// StringNode 返回值是首地址
+llvm::Value* StringNode::emitter(EmitContext &emitContext) {
+    cout << "StringNode : " << value <<endl;
+    string str = value.substr(1, value.length() - 2);
+    string after = string(1, '\n');
+    int pos = str.find("\\n");
+    while(pos != string::npos) {
+        str = str.replace(pos, 2, after);
+        pos = str.find("\\n");
+    }
+    llvm::Constant *strConst = llvm::ConstantDataArray::getString(myContext, str);
+    
+    llvm::Value *globalVar = new llvm::GlobalVariable(*(emitContext.myModule), strConst->getType(), true, llvm::GlobalValue::PrivateLinkage, strConst, "_Const_String_");
+    vector<llvm::Value*> indexList;
+    indexList.push_back(myBuilder.getInt32(0));
+    indexList.push_back(myBuilder.getInt32(0));
+    // var value
+    llvm::Value * varPtr = myBuilder.CreateInBoundsGEP(globalVar, llvm::ArrayRef<llvm::Value*>(indexList), "tmpstring");
+    return varPtr;
 }
 ```
 
 
 
-IdentifierNode节点emitter函数分析：首先在block栈中搜索，若没有搜索到，则表明此标识符并未被声明，会报错；接着调用loadinst函数，产生一条load指令，加载此标识符的值；
+IdentifierNode节点emitter函数分析：首先在符号栈中按照变量域从近到远搜索，若没有搜索到，再查询全局变量，若仍没有，则表明此标识符并未被声明，会报错；接着调用loadinst函数，产生一条load指令，加载此标识符的值；
 
 ```c++
 llvm::Value* IdentifierNode::emitter(EmitContext &emitContext){
     cout << "IdentifierNode : " << name << endl;
-    if(emitContext.getTop().find(name) == emitContext.getTop().end()){
+
+    llvm::Value* variable = emitContext.findVariable(name);
+    if(variable == nullptr){
         std::cerr << "undeclared variable " << name << endl;
-        return NULL;
+        return nullptr;
     }
-    llvm::Type* tp = emitContext.getTopType()[name];
-    return new llvm::LoadInst(tp,emitContext.getTop()[name], "LoadInst", false, myBuilder.GetInsertBlock());
+    llvm::Type* tp = variable->getType()->getPointerElementType();
+    llvm::outs()<<"identifier type:"<<*tp;
+    cout<<endl;
+
+    llvm::Value* res = nullptr;
+    // 如果传入的是一个数组的 ID
+    if(tp->isArrayTy()) {
+        vector<llvm::Value*> indexList;
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(myBuilder.getInt32(0));
+        res = myBuilder.CreateInBoundsGEP(variable, indexList, "arrayPtr");
+    }
+    else {
+        res = new llvm::LoadInst(tp, variable, "LoadInst", false, myBuilder.GetInsertBlock());
+    }
+    return res;
 }
 ```
 
 
 
-对于为数组成员的identifierNode节点emitter函数分析：首先找到其数组名对应的llvm::value，再得到其下标index值，再调用IRbuilder里的createInBoundsGEP函数，得到数组中对应元素的值；
+对于为数组成员的identifierNode节点emitter函数分析：首先找到其数组名对应的llvm::value，再得到其下标index值，再调用IRbuilder里的createInBoundsGEP函数，得到数组中对应元素的值，这里的数组标识符可能是数组类型，也可能是指针类型，对于两种类型要进行不同的处理；
 
 ```C++
-llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){ 
-    llvm::Value* arrayValue = emitContext.getTop()[identifier.name];
+llvm::Value* ArrayElementNode::emitter(EmitContext &emitContext){
+    cout << "ArrayElementNode : " << identifier.name << "[]" << endl;
+
+    llvm::Value* arrayValue = emitContext.findVariable(identifier.name);
+    if(arrayValue == nullptr){
+        cerr << "undeclared array " << identifier.name << endl;
+		return nullptr;
+    }
+
     llvm::Value* indexValue = index.emitter(emitContext);
     vector<llvm::Value*> indexList;
-    indexList.push_back(myBuilder.getInt32(0));
-    indexList.push_back(indexValue);
-    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmpvar");
-    return elePtr;
+
+    // 如果是一个指针
+    if(arrayValue->getType()->getPointerElementType()->isPointerTy()) {
+        arrayValue = myBuilder.CreateLoad(arrayValue->getType()->getPointerElementType(), arrayValue);
+        indexList.push_back(indexValue);    
+    }
+    // 如果是一个数组 
+    else {
+        indexList.push_back(myBuilder.getInt32(0));
+        indexList.push_back(indexValue);    
+    }
+
+    llvm::Value* elePtr =  myBuilder.CreateInBoundsGEP(arrayValue, llvm::ArrayRef<llvm::Value*>(indexList), "tmparray");
+    return myBuilder.CreateLoad(elePtr->getType()->getPointerElementType(), elePtr, "tmpvar");
+    //return myBuilder.CreateAlignedLoad(elePtr, 4);
 }
 
 ```
 
 
 
-调用函数时，首先判断是否为printf函数，若是则直接进入emitPrintf函数，否则查找有无该函数名的函数，若无则报错，否则先对调用中传入的每个参数调用emitter函数，再调用callinst函数实现一条call指令完成函数的调用；
+调用函数时，首先判断是否为printf/scanf/gets函数，若是则直接进入相关函数，否则查找有无该函数名的函数，若无则报错，否则先对调用中传入的每个参数调用emitter函数，再调用callinst函数实现一条call指令完成函数的调用；
 
 ```c++
 llvm::Value* FunctionCallNode::emitter(EmitContext &emitContext){
-    if(identifier.name == "printf"){ //若调用printf函数
-        return emitPrintf(emitContext,args);
+    if(identifier.name == "printf"){ //若调用 printf 函数
+        return emitPrintf(emitContext, args);
+    } else if(identifier.name == "scanf"){ //若调用 scanf 函数
+        return emitScanf(emitContext, args);
+    } else if(identifier.name == "gets") { // 若调用 gets 函数
+        return emitGets(emitContext, args);
     }
+
     //在module中查找以identifier命名的函数
     llvm::Function *func = emitContext.myModule->getFunction(identifier.name.c_str());
     if (func == NULL) {
@@ -330,13 +422,12 @@ llvm::Value* FunctionCallNode::emitter(EmitContext &emitContext){
     llvm::CallInst *call = llvm::CallInst::Create(func,llvm::makeArrayRef(tmp),"",myBuilder.GetInsertBlock());
     cout << "Creating method call: " << identifier.name << endl;
 	return call;
-
 }
 ```
 
 
 
-对二元运算节点emitter函数分析：分别先对运算符左右两边进行emitter，之后判断操作符的种类，分别返回其对应的llvm::instruction类中对应的二元运算符，再返回Create函数；支持的运算符分别有“+”、“-”、“*”、“/”、“and”、“or”、“LT”等；
+对二元运算节点emitter函数分析：分别先对运算符左右两边进行emitter，之后判断操作符的种类，分别返回其对应的llvm::instruction类中对应的二元运算符，再返回Create函数；支持的运算符分别有“+”、“-”、“*”、“/”、“and”、“or”、“LT”等；这里在进行运算前需要先对两边类型进行判断，按照c语言规则进行类型提示，无法转换的则需要报错
 
 ```c++
 llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
@@ -346,14 +437,82 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
     llvm::Instruction::BinaryOps bi_op;
 
     if(op == PLUS || op == MINUS || op == MUL || op == DIV){
-        if(op == PLUS){bi_op = llvm::Instruction::Add;}
-        else if(op == MINUS){bi_op = llvm::Instruction::Sub;}
-        else if(op == MUL){bi_op = llvm::Instruction::Mul;}
-        else if(op == DIV){bi_op = llvm::Instruction::SDiv;}
+        if (left->getType() != right->getType()) {
+            if (left->getType() == llvm::Type::getFloatTy(myContext)) {
+                right = typeCast(right, llvm::Type::getFloatTy(myContext));
+            } else {
+                if (right->getType() == llvm::Type::getFloatTy(myContext)) {
+                    left = typeCast(left, llvm::Type::getFloatTy(myContext));
+                } else {
+                    if (left->getType() == llvm::Type::getInt32Ty(myContext)) {
+                        right = typeCast(right, llvm::Type::getInt32Ty(myContext));
+                    } else if(right->getType() == llvm::Type::getInt32Ty(myContext)) {
+                        left = typeCast(left, llvm::Type::getInt32Ty(myContext));
+                    } else {
+                        throw logic_error("cann't use bool in +-*/");
+                    }
+                }
+            }
+        }
+        if(op == PLUS){bi_op = left->getType()->isFloatTy() ? llvm::Instruction::FAdd : llvm::Instruction::Add;}
+        else if(op == MINUS){bi_op = left->getType()->isFloatTy() ? llvm::Instruction::FSub : llvm::Instruction::Sub;}
+        else if(op == MUL){bi_op = left->getType()->isFloatTy() ? llvm::Instruction::FMul : llvm::Instruction::Mul;}
+        else if(op == DIV){bi_op = left->getType()->isFloatTy() ? llvm::Instruction::FDiv : llvm::Instruction::SDiv;}
         return llvm::BinaryOperator::Create(bi_op,left,right,"", myBuilder.GetInsertBlock());
     }
     else if(op == AND){
-        ……
+        if (left->getType() != llvm::Type::getInt1Ty(myContext) || right->getType() != llvm::Type::getInt1Ty(myContext)) {
+                    throw logic_error("cannot use types other than bool in and exp");
+                }
+                return myBuilder.CreateAnd(left, right, "tmpAnd");
+    }
+    else if (op == OR) {
+        if (left->getType() != llvm::Type::getInt1Ty(myContext) || right->getType() != llvm::Type::getInt1Ty(myContext)) {
+                    throw logic_error("cannot use types other than bool in and exp");
+                }
+                return myBuilder.CreateOr(left, right, "tmpOR");
+    }
+    else{  //LT、GT、EQ、NEQ、LE、GE
+        if (left->getType() != right->getType()) { //若左右的type类型不一致
+            if (left->getType() == llvm::Type::getFloatTy(myContext)) 
+            { right = typeCast(right, llvm::Type::getFloatTy(myContext));} 
+            else {
+                if (right->getType() == llvm::Type::getFloatTy(myContext)) 
+                {
+                    left = typeCast(left, llvm::Type::getFloatTy(myContext));
+                } 
+                else {
+                    if (left->getType() == llvm::Type::getInt32Ty(myContext)) {
+                        right = typeCast(right, llvm::Type::getInt32Ty(myContext));
+                    } else if(right->getType() == llvm::Type::getInt32Ty(myContext)) {
+                        left = typeCast(left, llvm::Type::getInt32Ty(myContext));
+                    } else {
+                        throw logic_error("cann't use bool in == != >= <= < >");
+                    }
+                }
+            }
+        }
+        else if (op == EQU) {
+            return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOEQ(left, right, "fcmptmp") : myBuilder.CreateICmpEQ(left, right, "icmptmp");
+        }
+        else if (op == GEQ) {
+            return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOGE(left, right, "fcmptmp") : myBuilder.CreateICmpSGE(left, right, "icmptmp");
+        }
+        else if (op == LEQ) {
+            return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOLE(left, right, "fcmptmp") : myBuilder.CreateICmpSLE(left, right, "icmptmp");
+        }
+        else if (op == GREATERT) {
+            return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOGT(left, right, "fcmptmp") : myBuilder.CreateICmpSGT(left, right, "icmptmp");
+        }
+        else if (op == LESST) {
+            return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpOLT(left, right, "fcmptmp") : myBuilder.CreateICmpSLT(left, right, "icmptmp");
+        }
+        else if (op == NEQ) {
+            return (left->getType() == llvm::Type::getFloatTy(myContext)) ? myBuilder.CreateFCmpONE(left, right, "fcmptmp") : myBuilder.CreateICmpNE(left, right, "icmptmp");
+        }
+        return NULL;
+    }
+}
 ```
 
 
@@ -363,21 +522,21 @@ llvm::Value* BinaryOpNode::emitter(EmitContext &emitContext){
 ```c++
 llvm::Value* AssignmentNode::emitter(EmitContext &emitContext){
     cout << "AssignmentNode,lhs: " << lhs.name << endl;
-    llvm::Value* result = emitContext.myModule->getGlobalVariable(lhs.name, true);//在全局中查找变量
-    llvm::Value* right = rhs.emitter(emitContext);
-    if(result == nullptr){
-        if(emitContext.getTop().find(lhs.name) == emitContext.getTop().end()){ //局部中也未找到对应identifier
-            cerr << "undeclared variable " << lhs.name << endl;
-		return NULL;
-        }
-        else{   
-            result = emitContext.getTop()[lhs.name];
-            //emitContext.getTop()[lhs.name] = right;
-        }
-    }
-    auto CurrentBlock = myBuilder.GetInsertBlock();
-    //return new llvm::StoreInst(rhs.emitter(emitContext), emitContext.getTop()[lhs.name], false, CurrentBlock);
     
+    // 在符号表和全局变量中查找
+    llvm::Value* result = emitContext.findVariable(lhs.name);
+    if(result == nullptr){
+        cerr << "undeclared variable " << lhs.name << endl;
+		return nullptr;
+    }
+
+    llvm::Value* right = rhs.emitter(emitContext);
+    // 定位 block
+    auto CurrentBlock = myBuilder.GetInsertBlock();
+    
+    if (right->getType() != result->getType()->getPointerElementType())
+        right = typeCast(right, result->getType()->getPointerElementType());
+
     return new llvm::StoreInst(right, result, false, CurrentBlock);
 }
 ```
@@ -389,27 +548,43 @@ if-else语句节点分析：会分别为condition条件、then、以及else部�
 ```c++
 llvm::Value* IfElseStatementNode::emitter(EmitContext &emitContext){
     cout << "Generating code for if-else"<<endl;
+
+    
+    llvm::Function *TheFunction = emitContext.currentFunc;
+    
+    llvm::BasicBlock *IfBB = llvm::BasicBlock::Create(myContext, "if", TheFunction);
+    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else",TheFunction);
+    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "afterifelse",TheFunction);
+
+    // 跳转判断语句
     llvm::Value *condValue = expression.emitter(emitContext), *thenValue = nullptr, *elseValue = nullptr;
     condValue = myBuilder.CreateICmpNE(condValue, llvm::ConstantInt::get(llvm::Type::getInt1Ty(myContext), 0, true), "ifCond");
-    
-    llvm::Function *TheFunction = myBuilder.GetInsertBlock()->getParent();
-    
-    llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(myContext, "then", TheFunction);
-    llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(myContext, "else",TheFunction);
-    llvm::BasicBlock *MergeBB = llvm::BasicBlock::Create(myContext, "ifcont",TheFunction);
+    auto branch = myBuilder.CreateCondBr(condValue, IfBB, ElseBB);
 
-    auto branch = myBuilder.CreateCondBr(condValue, ThenBB, ElseBB);
-    myBuilder.SetInsertPoint(ThenBB);
-    thenValue = ifBlock.emitter(emitContext);
-    myBuilder.CreateBr(MergeBB);
-    ThenBB = myBuilder.GetInsertBlock();
+    myBuilder.SetInsertPoint(IfBB);
+    // 将 if 的域放入栈顶
+    emitContext.pushBlock();
+    ifBlock.emitter(emitContext);
+    emitContext.popBlock();
+
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
+    // 跳过 else
+    else
+        myBuilder.CreateBr(ThenBB);
 
     myBuilder.SetInsertPoint(ElseBB);
-    elseValue = elseBlock.emitter(emitContext);
-    myBuilder.CreateBr(MergeBB);
-    ElseBB = myBuilder.GetInsertBlock();
+    // 将 else 的域放入栈顶
+    emitContext.pushBlock();
+    elseBlock.emitter(emitContext);
+    emitContext.popBlock();
 
-    myBuilder.SetInsertPoint(MergeBB);    
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
+    else
+        myBuilder.CreateBr(ThenBB);
+
+    myBuilder.SetInsertPoint(ThenBB);    
     return branch;
 }
 ```
@@ -439,9 +614,17 @@ llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
     condBB = myBuilder.GetInsertBlock();
 
     myBuilder.SetInsertPoint(loopBB);
-    block.emitter(emitContext);
-    myBuilder.CreateBr(condBB);
 
+    // 将 while 的域放入栈顶
+    emitContext.pushBlock();
+    block.emitter(emitContext);
+    if(emitContext.hasReturn)
+        emitContext.hasReturn = false;
+    else
+        myBuilder.CreateBr(condBB);
+
+    // while 结束, 将 while 的域弹出栈顶
+    emitContext.popBlock();
     myBuilder.SetInsertPoint(afterBB);
 
     GlobalAfterBB.pop();
@@ -451,10 +634,10 @@ llvm::Value*  WhileStatementNode::emitter(EmitContext &emitContext){
 
 
 
-对于变量定义节点，要先判断是普通变量还是数组的定义，确定类型后分别判断其是全局变量还是局部变量，然后对应分别新建Globalvariable和allocinst指令，创建新的变量；此处还会判断是否在定义时为其赋了初值，若是的话也会同时再调用assignmentNode为其赋值；
+对于变量定义节点，要先判断是普通变量还是数组的定义，确定类型后分别判断其是全局变量还是局部变量，然后对应分别新建Globalvariable和allocinst指令，创建新的变量；创建变量前会检查是否为重复定义，此处还会判断是否在定义时为其赋了初值，若是的话也会同时再调用assignmentNode为其赋值；
 
 ```c++
-llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){  
+llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {  
     if(size == 0){ //普通变量
         llvm::Type* llvmType = getLLvmType(type.name);
         
@@ -470,9 +653,15 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){
             return nullptr;
         } else {
             cout << "Creating local variable declaration " << type.name << " " << identifier.name<< endl;
-            emitContext.getTopType()[identifier.name] = llvmType;
             auto *block = myBuilder.GetInsertBlock();
             llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
+            // 
+            if(emitContext.getTop().count(identifier.name) != 0) {
+                // 当前域中有该变量, 重复定义
+                throw logic_error("Redefined Local Variable: " + identifier.name);
+            }
+            // 将新定义的变量类型和地址存入符号表中
+            emitContext.getTopType()[identifier.name] = llvmType;
             emitContext.getTop()[identifier.name] = alloc;
             if (assignmentExpression != NULL) {
                 AssignmentNode assn(identifier, *assignmentExpression,lineNo);
@@ -484,13 +673,40 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){
     else{ //数组
         llvm::Type* llvmType = getArrayLLvmType(type.name, size); 
         if(emitContext.currentFunc == nullptr) { //当前函数为空，为全局数组定义
-            ……
+            cout << "Creating global array declaration " << type.name << " " << identifier.name<< endl;
+            llvm::Value *tmp = emitContext.myModule->getGlobalVariable(identifier.name, true);
+            if(tmp != nullptr){
+                throw logic_error("Redefined Global Array: " + identifier.name);
+            }
+            llvm::GlobalVariable* globalVar = new llvm::GlobalVariable(*(emitContext.myModule), llvmType, false, llvm::GlobalValue::PrivateLinkage, 0, identifier.name);
+            
+            std::vector<llvm::Constant*> constArrayElem;
+            llvm::Constant* constElem = llvm::ConstantInt::get(llvmType->getArrayElementType(), 0);
+            for (int i = 0; i < llvmType->getArrayNumElements(); i++) {
+                constArrayElem.push_back(constElem);
+            }
+            llvm::Constant* constArray = llvm::ConstantArray::get(llvm::ArrayType::get(llvmType->getArrayElementType(), llvmType->getArrayNumElements()), constArrayElem);
+            globalVar->setInitializer(constArray);
+            return nullptr;
             
         }
-        else{
-            cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;
-            ……
-
+        else {
+            if(emitContext.getTop().count(identifier.name) != 0) {
+                // 当前域中有该变量, 重复定义
+                throw logic_error("Redefined Local Variable: " + identifier.name);
+            }
+            if(emitContext.isArgs) {
+                // 如果是函数中定义的数组需要返回 指针类型
+                cout << "Creating args array declaration " << type.name << " " << identifier.name<< endl;
+                llvmType = getPtrLLvmType(type.name);
+            } else {
+                cout << "Creating local array declaration " << type.name << " " << identifier.name<< endl;
+            }
+            emitContext.getTopType()[identifier.name] = llvmType;
+            auto *block = myBuilder.GetInsertBlock();
+            llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
+            emitContext.getTop()[identifier.name] = alloc;
+            return alloc;
         }
     }
 }
@@ -504,28 +720,51 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext){
 llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
     vector<llvm::Type*> argTypes;
     for(auto it : args){
-        argTypes.push_back(getLLvmType((*it).type.name));
+        if(it->size == 0)
+            argTypes.push_back(getLLvmType(it->type.name));
+        else {
+            argTypes.push_back(getPtrLLvmType(it->type.name));
+        }
     }
 	llvm::FunctionType *ftype = llvm::FunctionType::get(getLLvmType(type.name), makeArrayRef(argTypes), false);
 	llvm::Function *function = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, identifier.name.c_str(), emitContext.myModule);
 	llvm::BasicBlock *bblock = llvm::BasicBlock::Create(myContext, "entry", function, 0);
 
-    emitContext.currentFunc = function;
-
-	emitContext.pushBlock(bblock);
     myBuilder.SetInsertPoint(bblock);
+    emitContext.currentFunc = function;
+    emitContext.returnBB = llvm::BasicBlock::Create(myContext, "return", function, 0);
 
+    // 定义一个变量用来存储函数的返回值
+    if(type.name.compare("void") != 0) {
+        emitContext.returnVal = new llvm::AllocaInst(getLLvmType(type.name), bblock->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(), "", bblock);
+    }
+ 
+	emitContext.pushBlock();
+
+ 
 	llvm::Function::arg_iterator argsValues = function->arg_begin();
     llvm::Value* argumentValue;
 
+    emitContext.isArgs = true;
     for(auto it : args){
         (*it).emitter(emitContext);
         argumentValue = &*argsValues++;
         argumentValue->setName((it)->identifier.name.c_str());
         llvm::StoreInst *inst = new llvm::StoreInst(argumentValue, emitContext.getTop()[(it)->identifier.name], false, bblock);
 	}
+    emitContext.isArgs = false;
 	
 	block.emitter(emitContext);
+    emitContext.hasReturn = false;
+
+    myBuilder.SetInsertPoint(emitContext.returnBB);
+    if(type.name.compare("void") == 0) {
+        myBuilder.CreateRetVoid();
+    } else {
+        llvm::Value* ret = myBuilder.CreateLoad(getLLvmType(type.name), emitContext.returnVal, "");
+        myBuilder.CreateRet(ret);
+    }
+
 	emitContext.popBlock();
     emitContext.currentFunc = nullptr;
 	std::cout << "Creating function: " << identifier.name << endl;
@@ -533,7 +772,29 @@ llvm::Value* FunctionDeclarationNode::emitter(EmitContext &emitContext){
 }
 ```
 
+return 节点分析: 为了支持在函数中间执行 return 语句，我们需要在生成的 IR 代码中专门设置一个 return 块用来设置返回值
+```c++
+llvm::Value* ReturnStatementNode::emitter(EmitContext &emitContext){
 
+    cout << "Generating return code for " << typeid(expression).name() << endl;
+	llvm::Value *rv = expression.emitter(emitContext);
+    if (rv->getType() != emitContext.returnVal->getType()->getPointerElementType())
+        rv = typeCast(rv, emitContext.returnVal->getType()->getPointerElementType());
+    myBuilder.CreateStore(rv, emitContext.returnVal);
+
+    emitContext.hasReturn = true;
+    return myBuilder.CreateBr(emitContext.returnBB);
+}
+
+llvm::Value* ReturnVoidNode::emitter(EmitContext &emitContext){
+    
+    cout << "Generating return code for void " << endl;
+
+    emitContext.hasReturn = true;
+    return myBuilder.CreateBr(emitContext.returnBB);
+    //return myBuilder.CreateRetVoid();
+}
+```
 
 
 
@@ -573,5 +834,7 @@ clang-10 easy.o -o easy
 ![quicksort](report.assets/quicksort.png)
 
 ![multi](report.assets/multi.png)
+
+![course](report.assets/course.png)
 
 ## 总结

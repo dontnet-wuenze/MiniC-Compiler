@@ -79,17 +79,6 @@ llvm::Function* EmitContext::getGets(){
     return gets_func;
 }
 
-llvm::Function* EmitContext:: getCurFunction(){
-    return funStack.top();
-}
-
-void EmitContext::pushFunction(llvm::Function* func){
-    funStack.push(func);
-}
-
-void EmitContext::popFunction(){
-    funStack.pop();
-}
 
 void EmitContext::Run(BlockNode* Root){
     Root->emitter(*this);

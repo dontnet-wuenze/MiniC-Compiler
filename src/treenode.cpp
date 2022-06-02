@@ -693,10 +693,13 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {
             return nullptr;
         } else {
             cout << "Creating local variable declaration " << type.name << " " << identifier.name<< endl;
-            //auto *block = myBuilder.GetInsertBlock();
             auto *block = myBuilder.GetInsertBlock();
             llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
-            //llvm::Value* alloc = CreateEntryBlockAlloca(emitContext.currentFunc, identifier.name, llvmType);
+            // 
+            if(emitContext.getTop().count(identifier.name) != 0) {
+                // 当前域中有该变量, 重复定义
+                throw logic_error("Redefined Local Variable: " + identifier.name);
+            }
 
             // 将新定义的变量类型和地址存入符号表中
             emitContext.getTopType()[identifier.name] = llvmType;
@@ -729,6 +732,11 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {
             
         }
         else {
+            if(emitContext.getTop().count(identifier.name) != 0) {
+                // 当前域中有该变量, 重复定义
+                throw logic_error("Redefined Local Variable: " + identifier.name);
+            }
+
             if(emitContext.isArgs) {
                 // 如果是函数中定义的数组需要返回 指针类型
                 cout << "Creating args array declaration " << type.name << " " << identifier.name<< endl;

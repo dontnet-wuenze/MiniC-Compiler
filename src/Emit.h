@@ -40,8 +40,6 @@ public:
 class EmitContext{
 public:
     vector<symbolTable *> symbolTable_stack; //符号栈
-    stack<llvm::Function*> funStack; //函数栈
-
 
 public:
     llvm::Module *myModule; 
