@@ -6,7 +6,13 @@
 	BlockNode *programBlock; // the root
 	extern int yylex();
     extern int yylineno;
-	void yyerror(const char *s) { std::printf("Error: %s\n", s);std::exit(1); }
+	void yyerror(const char *s) { std::printf("Error: %s\n", s); }
+    typedef struct YYLTYPE {
+    int first_line;
+    int first_column;
+    int last_line;
+    int last_column;
+    } YYLTYPE;
     void printError(YYLTYPE *loc) { std::printf("Error at: line: %d, column: %d\n", loc->first_line, loc->first_column); }
 %}
 
