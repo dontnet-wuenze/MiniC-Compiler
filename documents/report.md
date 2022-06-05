@@ -76,10 +76,6 @@ user's code
 
 我们选择根据我们设计的语言，对 [ANSI C grammar, Lex specification](http://www.lysator.liu.se/c/ANSI-C-grammar-l.html) 进行精简，得到我们的 token.l 文件。
 
-<<<<<<< HEAD
-![token1](report.assets/token1.png)
-![token2](report.assets/token2.png)
-=======
 ```c
 D            [0-9]
 L            [a-zA-Z_]
@@ -151,7 +147,6 @@ E            ([Ee][+-]?{D}+)
 ```
 
 
->>>>>>> master
 
 ## 语法分析 -- Yacc (Bison)
 
