@@ -2,12 +2,15 @@
     #include "treenode.h"
     #include <cstdio>
     #include <cstdlib>
+    #define YYERROR_VERBOSE 1
 	BlockNode *programBlock; // the root
-
 	extern int yylex();
     extern int yylineno;
 	void yyerror(const char *s) { std::printf("Error: %s\n", s);std::exit(1); }
+    void printError(YYLTYPE *loc) { std::printf("Error at: line: %d, column: %d\n", loc->first_line, loc->first_column); }
 %}
+
+%error-verbose
 
 %union {
 	TreeNode *node;
@@ -87,9 +90,22 @@ statement:
     | IF '(' expression ')' block ELSE block {
         $$ = new IfElseStatementNode(*$3, *$5, *$7, yylineno);
     }
+    | IF error ELSE block {
+        printError(&@2);
+    }
     | WHILE '(' expression ')' block {
         $$ = new WhileStatementNode(*$3, *$5, yylineno);
-    };
+    }
+    | WHILE error ')' {
+        printError(&@2);
+    }
+    | WHILE error ']' {
+        printError(&@2);
+    }
+    | error ';' {
+        printError(&@1);
+    }
+    ;
 
 block: 
     '{' statements '}' {
@@ -109,12 +125,25 @@ var_decl:
     | identifier identifier '[' CONSTANT_INT ']' { // array
         $$ = new VariableDeclarationNode(*$1, *$2, atoi($4->c_str()), yylineno);
     }
+    | identifier identifier '[' error ']' {
+        printError(&@4);
+    }
+    | identifier error {
+        printError(&@2);
+    }
+    | error identifier {
+        printError(&@1);
+    }
     ;
 
 func_decl: 
     identifier identifier '(' func_decl_args ')' block {
         $$ = new FunctionDeclarationNode(*$1, *$2, *$4, *$6, yylineno); // TODO: delete $4 ?
-    };
+    }
+    | identifier identifier error ')' {
+        printError(&@3);
+    }
+    ;
     
 func_decl_args:
     {
@@ -220,5 +249,48 @@ expression:
     | identifier '[' expression ']' '=' expression { // array element access
         $$ = new ArrayElementAssignNode(*$1, *$3, *$6, yylineno);
     }
-    | const_value;
+    | const_value
+    | expression '=' error {
+        printError(&@3);
+    }
+    | expression AND error {
+        printError(&@3);
+    }
+    | expression OR error {
+        printError(&@3);
+    }
+    | expression PLUS error {
+        printError(&@3);
+    }
+    | expression MINUS error {
+        printError(&@3);
+    }
+    | expression MUL error {
+        printError(&@3);
+    }
+    | expression DIV error {
+        printError(&@3);
+    }
+    | expression LESST error {
+        printError(&@3);
+    }
+    | expression GREATERT error {
+        printError(&@3);
+    }
+    | expression EQU error {
+        printError(&@3);
+    }
+    | expression NEQ error {
+        printError(&@3);
+    }
+    | expression LEQ error {
+        printError(&@3);
+    }
+    | expression GEQ error {
+        printError(&@3);
+    }
+    expression '[' error ']' {
+        printError(&@3);
+    }
+    ;
 %%
