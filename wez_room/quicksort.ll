@@ -1,7 +1,6 @@
 ; ModuleID = 'main'
 source_filename = "main"
 
-@A = private global [200000 x i32] zeroinitializer
 @_Const_String_ = private constant [3 x i8] c"%d\00"
 @_Const_String_.1 = private constant [3 x i8] c"%d\00"
 @_Const_String_.2 = private constant [4 x i8] c"%d\0A\00"
@@ -156,7 +155,7 @@ afterifonly55:                                    ; preds = %if54, %afterifonly4
 define i32 @main() {
 entry:
   %0 = alloca i32
-  %B = alloca [10 x i32]
+  %B = alloca [1000000 x i32]
   %N = alloca i32
   %scanf = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_, i32 0, i32 0), i32* %N)
   %i = alloca i32
@@ -176,7 +175,7 @@ cond:                                             ; preds = %loop, %entry
 
 loop:                                             ; preds = %cond
   %LoadInst2 = load i32, i32* %i
-  %elePtr = getelementptr inbounds [10 x i32], [10 x i32]* %B, i32 0, i32 %LoadInst2
+  %elePtr = getelementptr inbounds [1000000 x i32], [1000000 x i32]* %B, i32 0, i32 %LoadInst2
   %scanf3 = call i32 (...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_Const_String_.1, i32 0, i32 0), i32* %elePtr)
   %LoadInst4 = load i32, i32* %i
   %2 = add i32 %LoadInst4, 1
@@ -190,7 +189,7 @@ afterLoop:                                        ; preds = %cond
   %LoadInst5 = load i32, i32* %N
   %3 = sub i32 %LoadInst5, 1
   store i32 %3, i32* %right
-  %arrayPtr = getelementptr inbounds [10 x i32], [10 x i32]* %B, i32 0, i32 0
+  %arrayPtr = getelementptr inbounds [1000000 x i32], [1000000 x i32]* %B, i32 0, i32 0
   %LoadInst6 = load i32, i32* %left
   %LoadInst7 = load i32, i32* %right
   call void @quicksort(i32* %arrayPtr, i32 %LoadInst6, i32 %LoadInst7)
@@ -206,7 +205,7 @@ cond8:                                            ; preds = %loop9, %afterLoop
 
 loop9:                                            ; preds = %cond8
   %LoadInst15 = load i32, i32* %i
-  %tmparray = getelementptr inbounds [10 x i32], [10 x i32]* %B, i32 0, i32 %LoadInst15
+  %tmparray = getelementptr inbounds [1000000 x i32], [1000000 x i32]* %B, i32 0, i32 %LoadInst15
   %tmpvar = load i32, i32* %tmparray
   %printf = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @_Const_String_.2, i32 0, i32 0), i32 %tmpvar)
   %LoadInst16 = load i32, i32* %i

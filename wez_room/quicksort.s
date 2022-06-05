@@ -112,7 +112,7 @@ main:                                   # @main
 	.cfi_offset %rbp, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register %rbp
-	subq	$64, %rsp
+	subq	$4000016, %rsp          # imm = 0x3D0910
 	leaq	-8(%rbp), %rsi
 	movl	$.L_Const_String_, %edi
 	xorl	%eax, %eax
@@ -127,7 +127,7 @@ main:                                   # @main
 # %bb.2:                                # %loop
                                         #   in Loop: Header=BB1_1 Depth=1
 	movslq	-4(%rbp), %rax
-	leaq	-52(%rbp,%rax,4), %rsi
+	leaq	-4000012(%rbp,%rax,4), %rsi
 	movl	$.L_Const_String_.1, %edi
 	xorl	%eax, %eax
 	callq	scanf
@@ -143,7 +143,7 @@ main:                                   # @main
 	decl	%edx
 	movl	%edx, -16(%rcx)
 	movl	-16(%rax), %esi
-	leaq	-52(%rbp), %rdi
+	leaq	-4000012(%rbp), %rdi
 	callq	quicksort
 	movl	$0, -4(%rbp)
 	.p2align	4, 0x90
@@ -155,7 +155,7 @@ main:                                   # @main
 # %bb.5:                                # %loop9
                                         #   in Loop: Header=BB1_4 Depth=1
 	movslq	-4(%rbp), %rax
-	movl	-52(%rbp,%rax,4), %esi
+	movl	-4000012(%rbp,%rax,4), %esi
 	movl	$.L_Const_String_.2, %edi
 	xorl	%eax, %eax
 	callq	printf
@@ -172,9 +172,6 @@ main:                                   # @main
 	.size	main, .Lfunc_end1-main
 	.cfi_endproc
                                         # -- End function
-	.type	.LA,@object             # @A
-	.local	.LA
-	.comm	.LA,800000,16
 	.type	.L_Const_String_,@object # @_Const_String_
 	.section	.rodata,"a",@progbits
 .L_Const_String_:

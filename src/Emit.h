@@ -40,12 +40,10 @@ public:
 class EmitContext{
 public:
     vector<symbolTable *> symbolTable_stack; //符号栈
-    stack<llvm::Function*> funStack; //函数栈
-
 
 public:
     llvm::Module *myModule; 
-    llvm::Function *printf,*scanf;
+    llvm::Function *printf,*scanf, *gets;
     llvm::Function* currentFunc;
     llvm::BasicBlock* returnBB;
     llvm::Value* returnVal;
@@ -69,7 +67,8 @@ public:
     void popFunction();
 
     llvm::Function* getPrintf(); //得到llvm形式的printf函数
-    llvm::Function* getScanf(); //得到llvm形式的scanf函数
-    void Run(BlockNode* Root); //对根节点进行run--------------------此处假定parser最开始的根节点为TreeNode
+    llvm::Function* getScanf();  //得到llvm形式的scanf函数
+    llvm::Function* getGets();   //得到llvm形式的gets函数
+    void Run(BlockNode* Root);   //对根节点进行run--------------------此处假定parser最开始的根节点为TreeNode
 
 };

@@ -69,17 +69,16 @@ llvm::Function* EmitContext::getScanf(){
     return scanf_func;
 }
 
-llvm::Function* EmitContext:: getCurFunction(){
-    return funStack.top();
+llvm::Function* EmitContext::getGets(){
+    llvm::FunctionType* gets_type = 
+    llvm::FunctionType::get(myBuilder.getInt32Ty(),true);
+    llvm::Function* gets_func = 
+    llvm::Function::Create(gets_type,llvm::Function::ExternalLinkage,llvm::Twine("gets"),this->myModule);
+
+    gets_func->setCallingConv(llvm::CallingConv::C);
+    return gets_func;
 }
 
-void EmitContext::pushFunction(llvm::Function* func){
-    funStack.push(func);
-}
-
-void EmitContext::popFunction(){
-    funStack.pop();
-}
 
 void EmitContext::Run(BlockNode* Root){
     Root->emitter(*this);
@@ -91,6 +90,7 @@ EmitContext::EmitContext(){
     this->myModule = new llvm::Module("main",myContext);
     this->printf = getPrintf();
     this->scanf = getScanf();
+    this->gets = getGets();
     this->hasReturn = false;
     this->isArgs = false;
 }

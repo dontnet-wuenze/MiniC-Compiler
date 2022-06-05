@@ -12,9 +12,9 @@ int main() {
     int try_credit = 0;
     int course_num = 0;
     while(1) {
-        scanf("%s", &course_info[course_num * 1000]);
-        // 输入 end 表示输入结束
-        if(course_info[course_num * 1000] == 'e') {
+        //scanf("%s", &course_info[course_num * 1000]);
+        gets(&course_info[course_num * 1000]);
+        if(course_info[course_num * 1000] == '\0') {
             break;
         }
         course_num = course_num + 1;
@@ -83,6 +83,7 @@ int main() {
     int course_remain = total_credit - pass_credit;
     printf("Credits Remaining: %d\n", course_remain);
 
+    printf("\n");
     printf("Possible Courses to Take Next\n");
     if(course_remain == 0) {
         printf("  None - Congratulations!\n");

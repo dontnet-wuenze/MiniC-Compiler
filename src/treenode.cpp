@@ -345,6 +345,15 @@ vector<llvm::Value *> *getScanfArgs(EmitContext &emitContext,vector<ExpressionNo
     return scanf_args;
 }
 
+vector<llvm::Value *> *getGetsArgs(EmitContext &emitContext,vector<ExpressionNode*>args){
+    vector<llvm::Value *> *gets_args = new vector<llvm::Value *>;
+    for(auto it: args){
+        llvm::Value* tmp = it->emitter(emitContext);
+        gets_args->push_back(tmp);
+    }
+    return gets_args;
+}
+
 vector<llvm::Value *> *getScanfArgsAddr(EmitContext &emitContext,vector<ExpressionNode*>args){
     vector<llvm::Value *> *scanf_args = new vector<llvm::Value *>;
     for(auto it: args){
@@ -366,11 +375,19 @@ llvm:: Value* emitScanf(EmitContext &emitContext,vector<ExpressionNode*> args){
     return myBuilder.CreateCall(emitContext.scanf, *scanf_args, "scanf");
 }
 
+llvm:: Value* emitGets(EmitContext &emitContext,vector<ExpressionNode*> args){
+    //vector<llvm::Value *> *scanf_args = getScanfArgsAddr(emitContext, args);    
+    vector<llvm::Value *> *gets_args = getGetsArgs(emitContext, args);    
+    return myBuilder.CreateCall(emitContext.gets, *gets_args, "gets");
+}
+
 llvm::Value* FunctionCallNode::emitter(EmitContext &emitContext){
-    if(identifier.name == "printf"){ //若调用printf函数
+    if(identifier.name == "printf"){ //若调用 printf 函数
         return emitPrintf(emitContext, args);
-    } else if(identifier.name == "scanf"){ //若调用scanf函数
+    } else if(identifier.name == "scanf"){ //若调用 scanf 函数
         return emitScanf(emitContext, args);
+    } else if(identifier.name == "gets") { // 若调用 gets 函数
+        return emitGets(emitContext, args);
     }
 
     //在module中查找以identifier命名的函数
@@ -676,10 +693,13 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {
             return nullptr;
         } else {
             cout << "Creating local variable declaration " << type.name << " " << identifier.name<< endl;
-            //auto *block = myBuilder.GetInsertBlock();
             auto *block = myBuilder.GetInsertBlock();
             llvm::AllocaInst *alloc = new llvm::AllocaInst(llvmType,block->getParent()->getParent()->getDataLayout().getAllocaAddrSpace(),(identifier.name.c_str()), block);
-            //llvm::Value* alloc = CreateEntryBlockAlloca(emitContext.currentFunc, identifier.name, llvmType);
+            // 
+            if(emitContext.getTop().count(identifier.name) != 0) {
+                // 当前域中有该变量, 重复定义
+                throw logic_error("Redefined Local Variable: " + identifier.name);
+            }
 
             // 将新定义的变量类型和地址存入符号表中
             emitContext.getTopType()[identifier.name] = llvmType;
@@ -712,6 +732,11 @@ llvm::Value* VariableDeclarationNode::emitter(EmitContext &emitContext) {
             
         }
         else {
+            if(emitContext.getTop().count(identifier.name) != 0) {
+                // 当前域中有该变量, 重复定义
+                throw logic_error("Redefined Local Variable: " + identifier.name);
+            }
+
             if(emitContext.isArgs) {
                 // 如果是函数中定义的数组需要返回 指针类型
                 cout << "Creating args array declaration " << type.name << " " << identifier.name<< endl;
