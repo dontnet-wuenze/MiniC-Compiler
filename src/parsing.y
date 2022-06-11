@@ -6,8 +6,8 @@
 	BlockNode *programBlock; // the root
 	extern int yylex();
     extern int yylineno;
-	void yyerror(const char *s) { std::printf("Error: %s\n", s); }
-    void printError(int lineno) { std::printf("Error at: line: %d\n", lineno); }
+	void yyerror(const char *s) { std::printf("Error: %s", s); }
+    void printError(int lineno, string s) { std::printf(" at: line: %d\n", lineno); }
 %}
 
 %error-verbose
@@ -91,19 +91,19 @@ statement:
         $$ = new IfElseStatementNode(*$3, *$5, *$7, yylineno);
     }
     | IF error ELSE block {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | WHILE '(' expression ')' block {
         $$ = new WhileStatementNode(*$3, *$5, yylineno);
     }
     | WHILE error ')' {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | WHILE error ']' {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | error ';' {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     ;
 
@@ -126,13 +126,13 @@ var_decl:
         $$ = new VariableDeclarationNode(*$1, *$2, atoi($4->c_str()), yylineno);
     }
     | identifier identifier '[' error ']' {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | identifier error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | error identifier {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     ;
 
@@ -141,7 +141,7 @@ func_decl:
         $$ = new FunctionDeclarationNode(*$1, *$2, *$4, *$6, yylineno); // TODO: delete $4 ?
     }
     | identifier identifier error ')' {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     ;
     
@@ -251,46 +251,46 @@ expression:
     }
     | const_value
     | expression '=' error {
-        printError(yylineno);
+        printError(yylineno, "wrong assign expression");
     }
     | expression AND error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression OR error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression PLUS error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression MINUS error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression MUL error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression DIV error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression LESST error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression GREATERT error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression EQU error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression NEQ error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression LEQ error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     | expression GEQ error {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     expression '[' error ']' {
-        printError(yylineno);
+        printError(yylineno, "");
     }
     ;
 %%

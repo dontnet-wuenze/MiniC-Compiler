@@ -11,6 +11,141 @@
 "name" : "Identifier: int"
 },
 {
+"name" : "Identifier: f"
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: a"
+}
+]
+},
+{
+"name" : "Block",
+"children" : 
+[
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "ArrayElementAssign",
+"children" : 
+[
+{
+"name" : "Identifier: a"
+},
+{
+"name" : "IntValue: 2"
+},
+{
+"name" : "IntValue: 3"
+}
+]
+}
+]
+},
+{
+"name" : "VariableDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
+"name" : "Identifier: b"
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "ArrayElementAssign",
+"children" : 
+[
+{
+"name" : "Identifier: b"
+},
+{
+"name" : "IntValue: 3"
+},
+{
+"name" : "IntValue: 4"
+}
+]
+}
+]
+},
+{
+"name" : "ExpressionStatement",
+"children" : 
+[
+{
+"name" : "FunctionCall",
+"children" : 
+[
+{
+"name" : "Identifier: printf"
+},
+{
+"name" : "StringValue: a[]: %d b[]: %d\n"
+},
+{
+"name" : "ArrayElement",
+"children" : 
+[
+{
+"name" : "Identifier: a"
+},
+{
+"name" : "IntValue: 2"
+}
+]
+},
+{
+"name" : "ArrayElement",
+"children" : 
+[
+{
+"name" : "Identifier: b"
+},
+{
+"name" : "IntValue: 3"
+}
+]
+}
+]
+}
+]
+},
+{
+"name" : "ReturnStatement",
+"children" : 
+[
+{
+"name" : "IntValue: 2"
+}
+]
+}
+]
+}
+]
+},
+{
+"name" : "FunctionDeclaration",
+"children" : 
+[
+{
+"name" : "Identifier: int"
+},
+{
 "name" : "Identifier: main"
 },
 {
@@ -25,48 +160,51 @@
 "name" : "Identifier: int"
 },
 {
-"name" : "Identifier: i"
-},
-{
-"name" : "IntValue: 10"
+"name" : "Identifier: A"
 }
 ]
 },
 {
-"name" : "WhileStatement",
+"name" : "ExpressionStatement",
 "children" : 
 [
 {
-"name" : "BinaryOperation",
+"name" : "FunctionCall",
 "children" : 
 [
 {
-"name" : "Identifier: i"
+"name" : "Identifier: f"
 },
 {
-"name" : "<"
-},
-{
-"name" : "IntValue: 5"
+"name" : "Identifier: A"
+}
+]
 }
 ]
 },
 {
-"name" : "Block",
+"name" : "ExpressionStatement",
 "children" : 
 [
 {
-"name" : "VariableDeclaration",
+"name" : "FunctionCall",
 "children" : 
 [
 {
-"name" : "Identifier: int"
+"name" : "Identifier: printf"
 },
 {
-"name" : "Identifier: i"
+"name" : "StringValue: A[]: %d\n"
 },
 {
-"name" : "IntValue: 5"
+"name" : "ArrayElement",
+"children" : 
+[
+{
+"name" : "Identifier: A"
+},
+{
+"name" : "IntValue: 2"
 }
 ]
 }
