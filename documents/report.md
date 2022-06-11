@@ -922,12 +922,7 @@ clang-10 easy.o -o easy
 
 ![multi](report.assets/multi.png)
 
-<<<<<<< HEAD
 ![course](report.assets/course.png)
 
 ## 总结
-=======
-## 总结
-
-TODO
->>>>>>> master
+通过这次编译原理的大作业，我们对实现一个编译器的流程有了更直观的了解，同时很多设计最终的实现也让我们很有成就感。当然编译器可以实现的内容还有很多，包括更完善的错误处理，宏展开，代码优化等等，希望将来我们可以更进一步。
